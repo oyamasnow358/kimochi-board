@@ -1,0 +1,1087 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="きもちボード">
+<meta name="theme-color" content="#FFF8E7">
+<title>きもちボード</title>
+<link rel="apple-touch-icon" id="touchIcon" href="">
+<style>
+  /* ============================================================
+     きもちボード  見た目（CSS）
+     ============================================================ */
+  :root {
+    --bg: #FFF8E7;
+    --ink: #1F2937;
+    --sub: #6B7280;
+    --card: #FFFFFF;
+    --line: #E5DCC3;
+    --go: #2F9E44;
+    --go-dark: #237A34;
+    --talk: #1C7ED6;
+    --talk-dark: #1864AB;
+    --back: #868E96;
+    --cols: 2;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; height: 100%; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "Hiragino Maru Gothic ProN", "ヒラギノ丸ゴ ProN", "BIZ UDPGothic", "BIZ UDゴシック",
+                 "Yu Gothic UI", "Meiryo", system-ui, sans-serif;
+    font-weight: 700;
+    -webkit-user-select: none; user-select: none;
+    -webkit-touch-callout: none;
+    touch-action: manipulation;
+    overscroll-behavior: none;
+    display: flex; flex-direction: column;
+    min-height: 100vh; min-height: 100dvh;
+    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  }
+  button { font: inherit; color: inherit; cursor: pointer; touch-action: manipulation; }
+
+  /* ---------- 上のバー（ステップ表示） ---------- */
+  .topbar {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 16px;
+  }
+  .steps { flex: 1; display: flex; gap: 10px; justify-content: center; }
+  .step {
+    display: flex; align-items: center; gap: 8px;
+    padding: 8px 18px; border-radius: 999px;
+    background: #fff; border: 3px solid var(--line);
+    color: #9CA3AF; font-size: clamp(16px, 2.2vw, 24px);
+    white-space: nowrap;
+  }
+  .step .num {
+    width: 1.6em; height: 1.6em; border-radius: 50%;
+    display: inline-grid; place-items: center;
+    background: #E5E7EB; color: #fff;
+  }
+  .step.now { border-color: var(--ink); color: var(--ink); }
+  .step.now .num { background: var(--ink); }
+  .step.done { color: var(--go); border-color: #B2F2BB; }
+  .step.done .num { background: var(--go); }
+
+  /* 先生用ボタン（長おし） */
+  .gear {
+    position: relative; flex: none;
+    width: 52px; height: 52px; border-radius: 50%;
+    border: none; background: transparent; opacity: .35;
+    font-size: 26px; display: grid; place-items: center;
+  }
+  .gear::after {
+    content: ""; position: absolute; inset: 2px; border-radius: 50%;
+    border: 4px solid transparent;
+  }
+  .gear.pressing { opacity: 1; }
+  .gear.pressing::after {
+    border-color: var(--talk);
+    animation: ring 1.5s linear forwards;
+  }
+  @keyframes ring { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
+
+  /* ---------- 画面 ---------- */
+  main { flex: 1; display: flex; flex-direction: column; min-height: 0; }
+  .screen { display: none; flex: 1; flex-direction: column; padding: 4px 20px 24px; min-height: 0; }
+  .screen.active { display: flex; animation: fadein .25s ease-out; }
+  @keyframes fadein { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+
+  .title-row { display: flex; align-items: center; gap: 16px; margin: 6px 0 16px; }
+  .title {
+    flex: 1; margin: 0; text-align: center;
+    font-size: clamp(32px, 5vw, 56px); letter-spacing: .04em;
+  }
+  .back-btn, .spacer { flex: none; width: 150px; }
+  .back-btn {
+    height: 72px; border-radius: 999px; border: 4px solid var(--back);
+    background: #fff; color: #495057; font-size: 26px;
+    box-shadow: 0 5px 0 #CED4DA;
+  }
+  .back-btn:active { transform: translateY(4px); box-shadow: 0 1px 0 #CED4DA; }
+
+  .chosen-chip {
+    display: flex; align-items: center; justify-content: center; gap: 12px;
+    margin: -6px auto 14px; padding: 6px 22px 6px 10px;
+    background: #fff; border-radius: 999px; border: 4px solid var(--c, var(--line));
+    font-size: clamp(22px, 3vw, 32px);
+  }
+  .chosen-chip .pic { width: 56px; height: 56px; }
+  .chosen-chip .emoji { font-size: 40px; }
+
+  /* ---------- 大きな選択ボタン ---------- */
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(var(--cols), minmax(0, 1fr));
+    grid-auto-rows: minmax(170px, 1fr);
+    gap: clamp(14px, 2vw, 24px);
+    flex: 1;
+    overflow-y: auto;
+    padding: 4px 4px 12px;
+    -webkit-overflow-scrolling: touch;
+  }
+  @media (min-width: 700px)  { :root { --cols: 3; } }
+  @media (min-width: 1000px) { :root { --cols: 4; } }
+
+  .card {
+    --c: #FFD43B;
+    position: relative;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+    padding: 14px 10px 12px;
+    background: var(--card);
+    border: 7px solid var(--c);
+    border-radius: 30px;
+    box-shadow: 0 7px 0 rgba(0,0,0,.14);
+    transition: transform .12s, box-shadow .12s, opacity .2s;
+    min-height: 0; overflow: hidden;
+  }
+  .card:active { transform: translateY(5px); box-shadow: 0 2px 0 rgba(0,0,0,.14); }
+  .card .pic { flex: 1 1 auto; width: 100%; min-height: 70px; }
+  .card .label {
+    font-size: clamp(24px, 3.3vw, 42px);
+    line-height: 1.15; text-align: center;
+    overflow-wrap: anywhere;
+  }
+  .card .label::after {
+    content: ""; display: block; height: 7px; margin: 6px auto 0; width: 70%;
+    border-radius: 7px; background: var(--c);
+  }
+  .grid.picked .card { opacity: .3; }
+  .grid.picked .card.chosen {
+    opacity: 1; transform: scale(1.06);
+    background: #FFFBEA; box-shadow: 0 0 0 7px var(--ink);
+  }
+
+  /* 画像・絵文字 */
+  .pic { display: flex; align-items: center; justify-content: center; }
+  .pic img { max-width: 100%; max-height: 100%; width: auto; height: 100%; object-fit: contain; border-radius: 16px; }
+  .card .pic { overflow: hidden; }
+  .pic .emoji { font-size: clamp(44px, min(8vw, 9vh), 110px); line-height: 1; font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif; }
+  .pic .letter {
+    font-family: inherit; font-size: clamp(44px, 6vw, 80px); color: #fff;
+    width: 1.6em; height: 1.6em; border-radius: 50%;
+    display: grid; place-items: center; background: var(--c, #ADB5BD);
+  }
+
+  .empty {
+    grid-column: 1 / -1; align-self: center; text-align: center;
+    color: var(--sub); font-size: 28px; line-height: 1.8;
+  }
+
+  /* ---------- 結果画面 ---------- */
+  #screen3 { justify-content: center; align-items: center; gap: clamp(14px, 3vh, 32px); }
+  .result-card {
+    width: min(100%, 1100px);
+    background: #fff; border-radius: 40px; border: 8px solid var(--ink);
+    padding: clamp(18px, 3vh, 36px) clamp(16px, 4vw, 48px);
+    display: flex; flex-direction: column; align-items: center; gap: clamp(8px, 2vh, 20px);
+    box-shadow: 0 10px 0 rgba(0,0,0,.12);
+    animation: pop .45s cubic-bezier(.2, 1.4, .4, 1);
+  }
+  @keyframes pop { from { transform: scale(.8); opacity: 0; } to { transform: none; opacity: 1; } }
+  .result-pics { display: flex; gap: clamp(16px, 4vw, 48px); align-items: center; }
+  .result-pics .pic {
+    width: clamp(84px, min(18vw, 20vh), 210px); height: clamp(84px, min(18vw, 20vh), 210px);
+    border-radius: 28px; border: 6px solid var(--c); background: #FFFDF5;
+  }
+  .result-pics .pic .emoji { font-size: clamp(56px, min(12vw, 14vh), 150px); }
+  .result-pics .plus { font-size: clamp(36px, 5vw, 60px); color: var(--sub); }
+  .sentence {
+    text-align: center; line-height: 1.3;
+    font-size: clamp(34px, min(7vw, 8.5vh), 100px);
+    overflow-wrap: anywhere;
+  }
+  .sentence .hl { padding: 0 .06em; }
+  .result-actions {
+    display: flex; gap: clamp(14px, 3vw, 32px); flex-wrap: wrap; justify-content: center;
+    width: min(100%, 1100px);
+  }
+  .big-btn {
+    flex: 1 1 280px; min-height: 100px; max-width: 520px;
+    border: none; border-radius: 999px; color: #fff;
+    font-size: clamp(28px, 3.6vw, 42px);
+    display: flex; align-items: center; justify-content: center; gap: 14px;
+  }
+  .big-btn .ico { font-size: 1.2em; }
+  .btn-talk { background: var(--talk); box-shadow: 0 8px 0 var(--talk-dark); }
+  .btn-next { background: var(--go);   box-shadow: 0 8px 0 var(--go-dark); }
+  .big-btn:active { transform: translateY(6px); box-shadow: 0 2px 0 rgba(0,0,0,.25); }
+  body.speaking .btn-talk .ico { animation: wave .6s ease-in-out infinite alternate; }
+  @keyframes wave { from { transform: scale(1); } to { transform: scale(1.25); } }
+  #screen3 { position: relative; }
+  .result-back { position: absolute; top: 4px; left: 20px; z-index: 2; }
+  .result-card { margin-top: 64px; }
+
+  /* アニメーション少なめ */
+  body.calm *, body.calm *::before, body.calm *::after { animation: none !important; transition: none !important; }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition: none !important; }
+  }
+
+  /* ---------- 先生用：設定画面 ---------- */
+  .modal {
+    position: fixed; inset: 0; z-index: 50;
+    background: rgba(17, 24, 39, .55);
+    display: none; align-items: flex-start; justify-content: center;
+    padding: 24px 12px; overflow-y: auto;
+    -webkit-user-select: text; user-select: text;
+  }
+  .modal.open { display: flex; }
+  .panel {
+    width: min(100%, 760px); background: #fff; border-radius: 24px;
+    padding: 24px clamp(16px, 4vw, 32px) 28px; font-weight: 400; font-size: 18px;
+    box-shadow: 0 20px 60px rgba(0,0,0,.3);
+  }
+  .panel h2 { margin: 0 0 4px; font-size: 26px; font-weight: 700; }
+  .panel h3 {
+    margin: 26px 0 10px; font-size: 20px; font-weight: 700;
+    padding-left: 10px; border-left: 6px solid var(--talk);
+  }
+  .panel .note { color: var(--sub); font-size: 15px; line-height: 1.6; margin: 6px 0; }
+  .panel label.row {
+    display: flex; align-items: center; gap: 12px; min-height: 52px;
+    padding: 6px 0; border-bottom: 1px solid #F1F3F5;
+  }
+  .panel label.row > span:first-child { flex: 1; }
+  .panel input[type=url], .panel input[type=text], .panel textarea, .panel select {
+    width: 100%; font: inherit; font-size: 17px; padding: 12px 14px;
+    border: 2px solid #CED4DA; border-radius: 12px; background: #fff;
+    -webkit-user-select: text; user-select: text;
+  }
+  .panel textarea { min-height: 96px; resize: vertical; }
+  .panel select { width: auto; min-width: 180px; }
+  .panel input[type=checkbox] { width: 30px; height: 30px; accent-color: var(--go); }
+  .panel input[type=range] { width: 220px; accent-color: var(--talk); }
+  .btns { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 12px; }
+  .btn {
+    border: none; border-radius: 12px; padding: 12px 20px; font-size: 17px; font-weight: 700;
+    background: #E9ECEF; color: var(--ink);
+  }
+  .btn.primary { background: var(--talk); color: #fff; }
+  .btn.ok { background: var(--go); color: #fff; }
+  .btn.warn { background: #FFF0F0; color: #C92A2A; }
+  .status {
+    margin-top: 10px; padding: 12px 14px; border-radius: 12px;
+    background: #F8F9FA; font-size: 15px; line-height: 1.7; white-space: pre-line;
+  }
+  .status.err { background: #FFF5F5; color: #C92A2A; }
+  .panel-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .panel code { background: #F1F3F5; padding: 1px 6px; border-radius: 6px; }
+
+  .toast {
+    position: fixed; left: 50%; bottom: 28px; transform: translateX(-50%);
+    background: rgba(17,24,39,.9); color: #fff; padding: 14px 22px; border-radius: 14px;
+    font-size: 18px; z-index: 60; display: none; max-width: 90vw; text-align: center;
+  }
+  .toast.show { display: block; }
+
+  /* 縦向き・小さい画面 */
+  @media (max-width: 699px) {
+    .step .txt { display: none; }
+    .back-btn, .spacer { width: 110px; }
+    .back-btn { font-size: 22px; height: 64px; }
+    .grid { grid-auto-rows: minmax(150px, 1fr); }
+  }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="steps" aria-label="すすみぐあい">
+    <div class="step" data-step="1"><span class="num">1</span><span class="txt">なにを？</span></div>
+    <div class="step" data-step="2"><span class="num">2</span><span class="txt">きもちは？</span></div>
+    <div class="step" data-step="3"><span class="num">3</span><span class="txt">できた！</span></div>
+  </div>
+  <button class="gear" id="gear" type="button" aria-label="先生用のせってい（ながおし）">⚙️</button>
+</header>
+
+<main>
+  <!-- ステップ1：教科・活動 -->
+  <section class="screen" id="screen1">
+    <div class="title-row">
+      <span class="spacer"></span>
+      <h1 class="title">なにを がんばった？</h1>
+      <span class="spacer"></span>
+    </div>
+    <div class="grid" id="gridSubjects"></div>
+  </section>
+
+  <!-- ステップ2：気持ち -->
+  <section class="screen" id="screen2">
+    <div class="title-row">
+      <button class="back-btn" id="back2" type="button">◀ もどる</button>
+      <h1 class="title">どんな きもち？</h1>
+      <span class="spacer"></span>
+    </div>
+    <div class="chosen-chip" id="chosenChip"></div>
+    <div class="grid" id="gridFeelings"></div>
+  </section>
+
+  <!-- ステップ3：結果 -->
+  <section class="screen" id="screen3">
+    <button class="back-btn result-back" id="back3" type="button">◀ もどる</button>
+    <div class="result-card" id="resultCard">
+      <div class="result-pics" id="resultPics"></div>
+      <div class="sentence" id="sentence"></div>
+    </div>
+    <div class="result-actions">
+      <button class="big-btn btn-talk" id="btnTalk" type="button"><span class="ico">🔊</span>もういちど きく</button>
+      <button class="big-btn btn-next" id="btnNext" type="button"><span class="ico">▶</span>つぎの ひと</button>
+    </div>
+  </section>
+</main>
+
+<!-- 先生用：設定画面 -->
+<div class="modal" id="settingsModal" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
+  <div class="panel">
+    <div class="panel-head">
+      <h2 id="settingsTitle">⚙️ 先生用せってい</h2>
+      <button class="btn ok" type="button" data-close>とじる</button>
+    </div>
+    <p class="note">この画面は、右上の ⚙️ を 1.5秒 ながおし すると開きます。変更はすぐに保存されます（この端末のみ）。</p>
+
+    <h3>データ（スプレッドシート）</h3>
+    <div id="urlBlock">
+      <label for="apiUrl" class="note" style="display:block">GAS ウェブアプリの URL（…/exec で終わるもの）</label>
+      <input type="url" id="apiUrl" data-key="apiUrl" placeholder="https://script.google.com/macros/s/XXXXXXXX/exec" autocomplete="off" autocapitalize="off" spellcheck="false">
+    </div>
+    <p class="note" id="gasModeNote" hidden>このアプリは GAS から直接ひらかれているので、URL の入力は不要です。</p>
+    <div class="btns">
+      <button class="btn primary" type="button" id="btnReload">🔄 データを読みこむ</button>
+    </div>
+    <div class="status" id="dataStatus">―</div>
+
+    <h3>読み上げ（音声）</h3>
+    <label class="row"><span>気持ちをえらんだら、自動で文を読み上げる</span><input type="checkbox" data-key="autoSpeak"></label>
+    <label class="row"><span>ボタンを押したとき、その名前を読み上げる</span><input type="checkbox" data-key="speakOnSelect"></label>
+    <label class="row"><span>こえ</span><select id="voiceSelect" data-key="voiceURI"><option value="">おまかせ（日本語）</option></select></label>
+    <label class="row"><span>はやさ <b id="rateVal"></b></span><input type="range" min="0.5" max="1.5" step="0.05" data-key="rate"></label>
+    <label class="row"><span>こえの高さ <b id="pitchVal"></b></span><input type="range" min="0.5" max="2" step="0.05" data-key="pitch"></label>
+    <div class="btns"><button class="btn" type="button" id="btnTestVoice">🔊 ためしに読む</button></div>
+
+    <h3>表示</h3>
+    <label class="row"><span>ボタンの列の数</span>
+      <select data-key="columns">
+        <option value="auto">自動（画面の幅で決める）</option>
+        <option value="1">1列（いちばん大きい）</option>
+        <option value="2">2列</option>
+        <option value="3">3列</option>
+        <option value="4">4列</option>
+        <option value="5">5列</option>
+      </select>
+    </label>
+    <label class="row"><span>アニメーションを少なくする（刺激をひかえめに）</span><input type="checkbox" data-key="calm"></label>
+    <label for="template" class="note" style="display:block;margin-top:12px">結果の文のかたち（<code>{教科}</code> と <code>{気持ち}</code> が選んだ言葉に入れかわります。改行もそのまま表示されます）</label>
+    <textarea id="template" data-key="template"></textarea>
+
+    <h3>記録</h3>
+    <label class="row"><span>えらんだ結果をスプレッドシートの「log」シートに記録する</span><input type="checkbox" data-key="log"></label>
+    <p class="note">※ 名前などの個人情報は記録しません（日時・教科・気持ちのみ）。</p>
+
+    <div class="btns" style="margin-top:28px">
+      <button class="btn ok" type="button" data-close>とじる</button>
+      <button class="btn warn" type="button" id="btnResetSettings">初期設定にもどす</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- 写真入りの内蔵データ（GitHub Pages 版で使用。無くても動きます） -->
+<script src="data.js"></script>
+<script>
+(function () {
+  'use strict';
+
+  /* ============================================================
+     ★ ここに GAS の URL を貼りつけておくと、どの端末でも設定不要になります
+        例） const DEFAULT_API_URL = 'https://script.google.com/macros/s/XXXX/exec';
+     ============================================================ */
+  const DEFAULT_API_URL = '';
+
+  const LS_SETTINGS = 'kimochiBoard.settings.v1';
+  const LS_DATA = 'kimochiBoard.data.v1';
+
+  const DEFAULT_SETTINGS = {
+    apiUrl: DEFAULT_API_URL,
+    autoSpeak: true,
+    speakOnSelect: true,
+    voiceURI: '',
+    rate: 0.9,
+    pitch: 1.1,
+    columns: 'auto',
+    calm: false,
+    template: '{教科}を\nがんばった！\n{気持ち}！',
+    log: false
+  };
+
+  // スプレッドシートにつながっていないときに使うサンプル
+  const SAMPLE = {
+    subjects: [
+      { id: 's01', name: 'こくご', emoji: '📖' },
+      { id: 's02', name: 'さんすう', emoji: '🔢' },
+      { id: 's03', name: 'せいかつ', emoji: '🌱' },
+      { id: 's04', name: 'おんがく', emoji: '🎵' },
+      { id: 's05', name: 'ずこう', emoji: '🎨' },
+      { id: 's06', name: 'たいいく', emoji: '🏃' },
+      { id: 's07', name: 'じりつ', emoji: '🧩', yomi: 'じりつかつどう' },
+      { id: 's08', name: 'きゅうしょく', emoji: '🍚' },
+      { id: 's09', name: 'そうじ', emoji: '🧹' },
+      { id: 's10', name: 'あそび', emoji: '⚽' }
+    ],
+    feelings: [
+      { id: 'f01', name: 'たのしかった', emoji: '😄', color: '#FFD43B' },
+      { id: 'f02', name: 'できた', emoji: '👍', color: '#69DB7C' },
+      { id: 'f03', name: 'うれしかった', emoji: '😊', color: '#FFA8C5' },
+      { id: 'f04', name: 'むずかしかった', emoji: '🤔', color: '#74C0FC' },
+      { id: 'f05', name: 'つかれた', emoji: '😪', color: '#B197FC' },
+      { id: 'f06', name: 'どきどきした', emoji: '😳', color: '#FFA94D' },
+      { id: 'f07', name: 'かなしかった', emoji: '😢', color: '#91A7FF' },
+      { id: 'f08', name: 'いやだった', emoji: '😣', color: '#ADB5BD' }
+    ]
+  };
+
+  const PALETTE = ['#FF8787', '#FFA94D', '#FFD43B', '#8CE99A', '#74C0FC', '#B197FC', '#FFA8C5', '#63E6BE', '#FFC078', '#91A7FF'];
+
+  // GAS から直接ひらかれているかどうか
+  const IS_GAS = typeof google !== 'undefined' && google.script && google.script.run;
+
+  const $ = function (s) { return document.querySelector(s); };
+  const $$ = function (s) { return Array.prototype.slice.call(document.querySelectorAll(s)); };
+
+  /* ---------- 保存（localStorage は使えないこともあるので必ず try） ---------- */
+  function load(key) {
+    try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : null; } catch (e) { return null; }
+  }
+  function save(key, val) {
+    try { localStorage.setItem(key, JSON.stringify(val)); } catch (e) { /* 保存できなくても動く */ }
+  }
+
+  let settings = Object.assign({}, DEFAULT_SETTINGS, load(LS_SETTINGS) || {});
+  if (!settings.apiUrl && DEFAULT_API_URL) settings.apiUrl = DEFAULT_API_URL;
+
+  const state = {
+    data: null,
+    source: 'sample',   // sample / cache / online
+    fetchedAt: null,
+    lastError: '',
+    step: 1,
+    subject: null,
+    feeling: null
+  };
+
+  /* ============================================================
+     データの準備
+     ============================================================ */
+  function normalizeItems(list) {
+    if (!Array.isArray(list)) return [];
+    return list.map(function (it, i) {
+      it = it || {};
+      return {
+        id: String(it.id || ('item' + i)),
+        name: String(it.name || '').trim(),
+        emoji: String(it.emoji || '').trim(),
+        imageUrl: String(it.imageUrl || it.image || '').trim(),
+        yomi: String(it.yomi || '').trim(),
+        color: /^#[0-9a-f]{3,8}$/i.test(String(it.color || '').trim()) ? String(it.color).trim() : ''
+      };
+    }).filter(function (it) { return it.name; })
+      .map(function (it, i) { if (!it.color) it.color = PALETTE[i % PALETTE.length]; return it; });
+  }
+
+  function normalizeData(d) {
+    d = d || {};
+    return { subjects: normalizeItems(d.subjects), feelings: normalizeItems(d.feelings) };
+  }
+
+  // data.js（写真入りの内蔵データ）があればそれを、無ければサンプルを使う
+  function builtinData() {
+    const d = window.KIMOCHI_DATA;
+    if (d && Array.isArray(d.subjects) && Array.isArray(d.feelings)) {
+      const nd = normalizeData(d);
+      if (nd.subjects.length || nd.feelings.length) return { data: nd, source: 'builtin' };
+    }
+    return { data: normalizeData(SAMPLE), source: 'sample' };
+  }
+
+  function initData() {
+    // スプレッドシートにつながっているときだけ、前回のデータを使う
+    const cached = (IS_GAS || settings.apiUrl) ? load(LS_DATA) : null;
+    if (cached && cached.data) {
+      state.data = normalizeData(cached.data);
+      state.source = 'cache';
+      state.fetchedAt = cached.fetchedAt || null;
+    }
+    if (!state.data || (!state.data.subjects.length && !state.data.feelings.length)) {
+      const b = builtinData();
+      state.data = b.data;
+      state.source = b.source;
+    }
+  }
+
+  function applyRemote(d) {
+    if (!d || d.ok === false) throw new Error((d && d.error) || 'データの形がちがいます');
+    const nd = normalizeData(d);
+    if (!nd.subjects.length && !nd.feelings.length) throw new Error('スプレッドシートにデータが1件もありません');
+    state.data = nd;
+    state.source = 'online';
+    state.fetchedAt = new Date().toISOString();
+    state.lastError = '';
+    save(LS_DATA, { data: nd, fetchedAt: state.fetchedAt });
+    renderLists();
+    updateStatus();
+    preloadImages();
+  }
+
+  function loadRemote(manual) {
+    if (IS_GAS) {
+      return new Promise(function (resolve) {
+        google.script.run
+          .withSuccessHandler(function (d) {
+            try { applyRemote(d); if (manual) toast('読みこみました'); resolve(true); }
+            catch (err) { onLoadError(err, manual); resolve(false); }
+          })
+          .withFailureHandler(function (err) { onLoadError(err, manual); resolve(false); })
+          .getData();
+      });
+    }
+
+    const url = (settings.apiUrl || '').trim();
+    if (!url) {
+      if (manual) toast('GAS の URL が入っていません');
+      updateStatus();
+      return Promise.resolve(false);
+    }
+    if (!/^https:\/\/script\.google(usercontent)?\.com\//.test(url)) {
+      state.lastError = 'URL が GAS のものではないようです（https://script.google.com/… で始まります）';
+    }
+
+    const ctrl = ('AbortController' in window) ? new AbortController() : null;
+    const timer = setTimeout(function () { if (ctrl) ctrl.abort(); }, 20000);
+    const reqUrl = url + (url.indexOf('?') === -1 ? '?' : '&') + 'api=data&t=' + Date.now();
+
+    if (manual) setStatus('読みこみ中…', false);
+    return fetch(reqUrl, { cache: 'no-store', redirect: 'follow', signal: ctrl ? ctrl.signal : undefined })
+      .then(function (res) {
+        if (!res.ok) throw new Error('サーバーの返事がエラーでした（' + res.status + '）');
+        return res.text();
+      })
+      .then(function (text) {
+        let d;
+        try { d = JSON.parse(text); }
+        catch (e) { throw new Error('JSON ではない返事が来ました。デプロイの「アクセスできるユーザー」が「全員」になっているか確認してください'); }
+        applyRemote(d);
+        if (manual) toast('読みこみました');
+        return true;
+      })
+      .catch(function (err) {
+        if (err && err.name === 'AbortError') err = new Error('時間切れ（20秒）になりました。通信を確認してください');
+        onLoadError(err, manual);
+        return false;
+      })
+      .finally(function () { clearTimeout(timer); });
+  }
+
+  function onLoadError(err, manual) {
+    let msg = (err && err.message) ? err.message : String(err);
+    if (/Failed to fetch|NetworkError|Load failed/i.test(msg)) {
+      msg = '通信できませんでした。URL・デプロイの「アクセスできるユーザー：全員」・ネット接続を確認してください';
+    }
+    state.lastError = msg;
+    updateStatus();
+    if (manual) toast('読みこめませんでした');
+    console.warn('[きもちボード] データ読みこみ失敗:', msg);
+  }
+
+  function preloadImages() {
+    const all = state.data.subjects.concat(state.data.feelings);
+    all.forEach(function (it) {
+      const c = imageCandidates(it.imageUrl);
+      if (c.length) { const img = new Image(); img.referrerPolicy = 'no-referrer'; img.src = c[0]; }
+    });
+  }
+
+  /* ============================================================
+     画像（Googleドライブのリンクも表示できるように変換）
+     ============================================================ */
+  function imageCandidates(u) {
+    if (!u) return [];
+    u = String(u).trim();
+    if (/^[a-z][a-z0-9+.-]*:/i.test(u) && !/^https?:/i.test(u) && !/^data:image\//i.test(u)) return [];
+    const m = u.match(/drive\.google\.com\/file\/d\/([\w-]+)/) ||
+              u.match(/drive\.google\.com\/(?:open|uc|thumbnail)\?(?:.*&)?id=([\w-]+)/);
+    if (m) {
+      return [
+        'https://drive.google.com/thumbnail?id=' + m[1] + '&sz=w600',
+        'https://lh3.googleusercontent.com/d/' + m[1] + '=w600'
+      ];
+    }
+    return [u];
+  }
+
+  function makePic(it) {
+    const wrap = document.createElement('span');
+    wrap.className = 'pic';
+    wrap.style.setProperty('--c', it.color);
+
+    function fallback() {
+      wrap.innerHTML = '';
+      const s = document.createElement('span');
+      if (it.emoji) {
+        s.className = 'emoji';
+        s.textContent = it.emoji;
+      } else {
+        s.className = 'letter';
+        s.textContent = Array.from(it.name)[0] || '？';
+      }
+      wrap.appendChild(s);
+    }
+
+    const cands = imageCandidates(it.imageUrl);
+    if (!cands.length) { fallback(); return wrap; }
+
+    let idx = 0;
+    const img = document.createElement('img');
+    img.alt = '';
+    img.draggable = false;
+    img.decoding = 'async';
+    img.referrerPolicy = 'no-referrer';
+    img.onerror = function () {
+      idx++;
+      if (idx < cands.length) img.src = cands[idx];
+      else fallback();
+    };
+    img.src = cands[0];
+    wrap.appendChild(img);
+    return wrap;
+  }
+
+  /* ============================================================
+     画面をつくる
+     ============================================================ */
+  function renderGrid(el, items, onPick, emptyMsg) {
+    el.innerHTML = '';
+    el.classList.remove('picked');
+    if (!items.length) {
+      const p = document.createElement('div');
+      p.className = 'empty';
+      p.textContent = emptyMsg;
+      el.appendChild(p);
+      return;
+    }
+    items.forEach(function (it) {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'card';
+      b.style.setProperty('--c', it.color);
+      b.setAttribute('aria-label', it.name);
+      b.appendChild(makePic(it));
+      const l = document.createElement('span');
+      l.className = 'label';
+      l.textContent = it.name;
+      b.appendChild(l);
+      b.addEventListener('click', function () { onPick(it, b, el); });
+      el.appendChild(b);
+    });
+  }
+
+  function renderLists() {
+    renderGrid($('#gridSubjects'), state.data.subjects, pickSubject,
+      'ボタンがありません。\n先生：スプレッドシートに「教科」の行を追加してください。');
+    renderGrid($('#gridFeelings'), state.data.feelings, pickFeeling,
+      'ボタンがありません。\n先生：スプレッドシートに「気持ち」の行を追加してください。');
+  }
+
+  function renderChosenChip() {
+    const chip = $('#chosenChip');
+    chip.innerHTML = '';
+    if (!state.subject) return;
+    chip.style.setProperty('--c', state.subject.color);
+    chip.appendChild(makePic(state.subject));
+    const t = document.createElement('span');
+    t.textContent = state.subject.name;
+    chip.appendChild(t);
+  }
+
+  function renderResult() {
+    const s = state.subject, f = state.feeling;
+    const pics = $('#resultPics');
+    pics.innerHTML = '';
+    pics.appendChild(makePic(s));
+    const plus = document.createElement('span');
+    plus.className = 'plus';
+    plus.textContent = '＋';
+    pics.appendChild(plus);
+    pics.appendChild(makePic(f));
+
+    const box = $('#sentence');
+    box.innerHTML = '';
+    String(settings.template || DEFAULT_SETTINGS.template).split(/\r?\n/).forEach(function (line) {
+      const div = document.createElement('div');
+      line.split(/(\{教科\}|\{気持ち\})/).forEach(function (part) {
+        if (!part) return;
+        if (part === '{教科}' || part === '{気持ち}') {
+          const it = part === '{教科}' ? s : f;
+          const span = document.createElement('span');
+          span.className = 'hl';
+          span.style.setProperty('--c', it.color);
+          span.textContent = it.name;
+          div.appendChild(span);
+        } else {
+          div.appendChild(document.createTextNode(part));
+        }
+      });
+      if (!div.childNodes.length) div.innerHTML = '&nbsp;';
+      box.appendChild(div);
+    });
+
+    // アニメーションをもう一度動かす
+    const card = $('#resultCard');
+    card.style.animation = 'none';
+    void card.offsetWidth;
+    card.style.animation = '';
+  }
+
+  function speechText() {
+    const yomi = function (it) { return it ? (it.yomi || it.name) : ''; };
+    return String(settings.template || DEFAULT_SETTINGS.template)
+      .replace(/\{教科\}/g, yomi(state.subject))
+      .replace(/\{気持ち\}/g, yomi(state.feeling))
+      .replace(/\r?\n/g, ' ');
+  }
+
+  /* ============================================================
+     画面の切りかえ（誤タップ防止つき）
+     ============================================================ */
+  let lockUntil = 0;
+  function tapOk() {
+    const now = Date.now();
+    if (now < lockUntil) return false;
+    lockUntil = now + 700;
+    return true;
+  }
+
+  function go(step) {
+    state.step = step;
+    $$('.screen').forEach(function (s) { s.classList.remove('active'); });
+    $('#screen' + step).classList.add('active');
+    $$('.step').forEach(function (el) {
+      const n = Number(el.getAttribute('data-step'));
+      el.classList.toggle('now', n === step);
+      el.classList.toggle('done', n < step);
+    });
+    $$('.grid').forEach(function (g) {
+      g.classList.remove('picked');
+      $$('.card.chosen').forEach(function (c) { c.classList.remove('chosen'); });
+      g.scrollTop = 0;
+    });
+    lockUntil = Date.now() + 600; // 画面が変わった直後のタップは受けつけない
+  }
+
+  function transitionDelay() { return settings.calm ? 150 : 380; }
+
+  function pickSubject(it, btn, grid) {
+    if (!tapOk()) return;
+    state.subject = it;
+    grid.classList.add('picked');
+    btn.classList.add('chosen');
+    if (settings.speakOnSelect) speak(it.yomi || it.name);
+    setTimeout(function () {
+      renderChosenChip();
+      go(2);
+    }, transitionDelay());
+  }
+
+  function pickFeeling(it, btn, grid) {
+    if (!tapOk()) return;
+    state.feeling = it;
+    grid.classList.add('picked');
+    btn.classList.add('chosen');
+    // iPad ではタップの直後に読み上げを始める必要があるので、ここで呼ぶ
+    if (settings.autoSpeak) speak(speechText());
+    else if (settings.speakOnSelect) speak(it.yomi || it.name);
+    sendLog();
+    setTimeout(function () {
+      renderResult();
+      go(3);
+    }, transitionDelay());
+  }
+
+  function resetForNext() {
+    stopSpeak();
+    state.subject = null;
+    state.feeling = null;
+    go(1);
+  }
+
+  /* ============================================================
+     音声（Web Speech API）
+     ============================================================ */
+  const canSpeak = 'speechSynthesis' in window && 'SpeechSynthesisUtterance' in window;
+  let jaVoices = [];
+
+  function loadVoices() {
+    if (!canSpeak) return;
+    const all = window.speechSynthesis.getVoices() || [];
+    jaVoices = all.filter(function (v) { return /^ja(-|_|$)/i.test(v.lang); });
+    const sel = $('#voiceSelect');
+    const keep = settings.voiceURI;
+    sel.innerHTML = '<option value="">おまかせ（日本語）</option>';
+    jaVoices.forEach(function (v) {
+      const o = document.createElement('option');
+      o.value = v.voiceURI;
+      o.textContent = v.name + (v.localService ? '' : '（オンライン）');
+      sel.appendChild(o);
+    });
+    sel.value = keep && jaVoices.some(function (v) { return v.voiceURI === keep; }) ? keep : '';
+  }
+
+  function pickVoice() {
+    if (!jaVoices.length) return null;
+    if (settings.voiceURI) {
+      const v = jaVoices.find(function (x) { return x.voiceURI === settings.voiceURI; });
+      if (v) return v;
+    }
+    // iPad の「Kyoko」「O-ren」などを優先
+    return jaVoices.find(function (v) { return /Kyoko|O-ren|Otoya|Hattori/i.test(v.name); }) ||
+           jaVoices.find(function (v) { return v.localService; }) || jaVoices[0];
+  }
+
+  function speak(text) {
+    if (!canSpeak || !text) return;
+    try {
+      const synth = window.speechSynthesis;
+      synth.cancel();
+      const u = new SpeechSynthesisUtterance(text);
+      u.lang = 'ja-JP';
+      u.rate = Number(settings.rate) || 1;
+      u.pitch = Number(settings.pitch) || 1;
+      const v = pickVoice();
+      if (v) u.voice = v;
+      u.onstart = function () { document.body.classList.add('speaking'); };
+      u.onend = u.onerror = function () { document.body.classList.remove('speaking'); };
+      synth.speak(u);
+      if (synth.paused) synth.resume();
+    } catch (e) {
+      console.warn('[きもちボード] 読み上げできませんでした', e);
+    }
+  }
+
+  function stopSpeak() {
+    if (canSpeak) { try { window.speechSynthesis.cancel(); } catch (e) {} }
+    document.body.classList.remove('speaking');
+  }
+
+  /* ============================================================
+     記録（任意）
+     ============================================================ */
+  function sendLog() {
+    if (!settings.log || !state.subject || !state.feeling) return;
+    const payload = { subject: state.subject.name, feeling: state.feeling.name };
+    try {
+      if (IS_GAS) {
+        google.script.run.withFailureHandler(function (e) { console.warn(e); }).logResult(payload);
+      } else if (settings.apiUrl) {
+        fetch(settings.apiUrl, {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify(payload)
+        }).catch(function (e) { console.warn(e); });
+      }
+    } catch (e) { console.warn(e); }
+  }
+
+  /* ============================================================
+     先生用：設定画面
+     ============================================================ */
+  function applySettings() {
+    const cols = settings.columns;
+    $$('.grid').forEach(function (g) {
+      if (cols && cols !== 'auto') g.style.setProperty('--cols', cols);
+      else g.style.removeProperty('--cols');
+    });
+    document.body.classList.toggle('calm', !!settings.calm);
+    $('#rateVal').textContent = '×' + Number(settings.rate).toFixed(2);
+    $('#pitchVal').textContent = '×' + Number(settings.pitch).toFixed(2);
+  }
+
+  function fillForm() {
+    $$('[data-key]').forEach(function (el) {
+      const k = el.getAttribute('data-key');
+      if (el.type === 'checkbox') el.checked = !!settings[k];
+      else el.value = settings[k] == null ? '' : settings[k];
+    });
+    if (IS_GAS) {
+      $('#urlBlock').hidden = true;
+      $('#gasModeNote').hidden = false;
+    }
+  }
+
+  function bindForm() {
+    $$('[data-key]').forEach(function (el) {
+      const k = el.getAttribute('data-key');
+      const handler = function () {
+        let v;
+        if (el.type === 'checkbox') v = el.checked;
+        else if (el.type === 'range') v = Number(el.value);
+        else v = el.value;
+        if (k === 'apiUrl') v = String(v).trim();
+        if (k === 'template' && !String(v).trim()) v = DEFAULT_SETTINGS.template;
+        settings[k] = v;
+        save(LS_SETTINGS, settings);
+        applySettings();
+      };
+      el.addEventListener(el.type === 'checkbox' || el.tagName === 'SELECT' ? 'change' : 'input', handler);
+    });
+    $('#apiUrl').addEventListener('change', function () {
+      if (settings.apiUrl) loadRemote(true);
+      else updateStatus();
+    });
+  }
+
+  function fmtTime(iso) {
+    if (!iso) return '';
+    const d = new Date(iso);
+    if (isNaN(d)) return '';
+    const p = function (n) { return ('0' + n).slice(-2); };
+    return d.getFullYear() + '/' + p(d.getMonth() + 1) + '/' + p(d.getDate()) + ' ' + p(d.getHours()) + ':' + p(d.getMinutes());
+  }
+
+  function setStatus(text, isErr) {
+    const el = $('#dataStatus');
+    el.textContent = text;
+    el.classList.toggle('err', !!isErr);
+  }
+
+  function updateStatus() {
+    const src = {
+      online: '✅ スプレッドシートから読みこみ済み',
+      cache: '💾 前回読みこんだデータを表示中',
+      builtin: '📦 アプリ内蔵のデータ（写真入り）を表示中',
+      sample: '📝 サンプルデータを表示中（スプレッドシート未接続）'
+    }[state.source];
+    let text = src;
+    if (state.fetchedAt && state.source !== 'sample') text += '（' + fmtTime(state.fetchedAt) + ' 取得）';
+    text += '\n教科・活動：' + state.data.subjects.length + ' 件 ／ 気持ち：' + state.data.feelings.length + ' 件';
+    if (!canSpeak) text += '\n⚠ この端末のブラウザは読み上げに対応していません';
+    if (state.lastError) text += '\n⚠ ' + state.lastError;
+    setStatus(text, !!state.lastError);
+  }
+
+  function openSettings() {
+    stopSpeak();
+    fillForm();
+    loadVoices();
+    updateStatus();
+    $('#settingsModal').classList.add('open');
+  }
+  function closeSettings() {
+    $('#settingsModal').classList.remove('open');
+    if (state.step === 3 && state.subject && state.feeling) renderResult();
+    lockUntil = Date.now() + 500;
+  }
+
+  // ⚙️ の長おし
+  function bindGear() {
+    const gear = $('#gear');
+    let timer = null;
+    const cancel = function () { clearTimeout(timer); timer = null; gear.classList.remove('pressing'); };
+    gear.addEventListener('pointerdown', function (e) {
+      e.preventDefault();
+      gear.classList.add('pressing');
+      timer = setTimeout(function () { cancel(); openSettings(); }, 1500);
+    });
+    ['pointerup', 'pointerleave', 'pointercancel'].forEach(function (t) { gear.addEventListener(t, cancel); });
+    gear.addEventListener('contextmenu', function (e) { e.preventDefault(); });
+    // パソコンでの確認用：キーボードの Shift + S でも開けます
+    document.addEventListener('keydown', function (e) {
+      if (e.shiftKey && (e.key === 'S' || e.key === 's') && !$('#settingsModal').classList.contains('open')) openSettings();
+      if (e.key === 'Escape') closeSettings();
+    });
+  }
+
+  let toastTimer = null;
+  function toast(msg) {
+    const t = $('#toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { t.classList.remove('show'); }, 2600);
+  }
+
+  // ホーム画面用アイコンをその場で作る
+  function makeTouchIcon() {
+    try {
+      const c = document.createElement('canvas');
+      c.width = c.height = 180;
+      const g = c.getContext('2d');
+      g.fillStyle = '#FFD43B';
+      g.fillRect(0, 0, 180, 180);
+      g.font = '120px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif';
+      g.textAlign = 'center';
+      g.textBaseline = 'middle';
+      g.fillText('😊', 90, 98);
+      $('#touchIcon').href = c.toDataURL('image/png');
+    } catch (e) { /* アイコンが作れなくても動く */ }
+  }
+
+  /* ============================================================
+     はじまり
+     ============================================================ */
+  function start() {
+    initData();
+    applySettings();
+    renderLists();
+    go(1);
+    bindGear();
+    bindForm();
+    makeTouchIcon();
+
+    $('#back2').addEventListener('click', function () { if (tapOk()) { stopSpeak(); go(1); } });
+    $('#back3').addEventListener('click', function () { if (tapOk()) { stopSpeak(); go(2); } });
+    $('#btnTalk').addEventListener('click', function () { if (tapOk()) speak(speechText()); });
+    $('#btnNext').addEventListener('click', function () { if (tapOk()) resetForNext(); });
+
+    $$('[data-close]').forEach(function (b) { b.addEventListener('click', closeSettings); });
+    $('#settingsModal').addEventListener('click', function (e) { if (e.target.id === 'settingsModal') closeSettings(); });
+    $('#btnReload').addEventListener('click', function () { loadRemote(true); });
+    $('#btnTestVoice').addEventListener('click', function () {
+      speak('こくごを がんばった！ たのしかった！');
+    });
+    $('#btnResetSettings').addEventListener('click', function () {
+      if (!confirm('せっていを はじめの状態に もどしますか？（GAS の URL も消えます）')) return;
+      settings = Object.assign({}, DEFAULT_SETTINGS);
+      save(LS_SETTINGS, settings);
+      fillForm();
+      applySettings();
+      loadVoices();
+      toast('初期設定にもどしました');
+    });
+
+    if (canSpeak) {
+      loadVoices();
+      if ('onvoiceschanged' in window.speechSynthesis) window.speechSynthesis.onvoiceschanged = loadVoices;
+    }
+
+    // ピンチで拡大されないようにする（iPad）
+    document.addEventListener('gesturestart', function (e) { e.preventDefault(); });
+
+    // ?settings=1 をつけて開くと、最初から設定画面を表示
+    if (/[?&]settings=1/.test(location.search)) openSettings();
+
+    preloadImages();
+    loadRemote(false);
+  }
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start);
+  else start();
+})();
+</script>
+</body>
+</html>

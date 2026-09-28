@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>きもちボード セットアップ手順</title>
+<style>
+  :root { --ink:#1F2937; --sub:#5B6472; --line:#E6E1D3; --bg:#FFFCF4; --accent:#1C7ED6; --warn:#C92A2A; --ok:#2F9E44; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font-family: "BIZ UDPGothic", "Hiragino Sans", "Yu Gothic UI", "Meiryo", sans-serif;
+    font-size: 17px; line-height: 1.85;
+  }
+  .wrap { max-width: 860px; margin: 0 auto; padding: 32px 16px 80px; }
+  h1 { font-size: 30px; margin: 0 0 4px; }
+  .lead { color: var(--sub); margin: 0 0 24px; }
+  h2 {
+    margin: 48px 0 12px; font-size: 24px; padding: 8px 14px;
+    background: #fff; border-left: 8px solid var(--accent); border-radius: 8px;
+  }
+  h3 { margin: 28px 0 6px; font-size: 19px; }
+  ol, ul { padding-left: 1.6em; }
+  li { margin: 6px 0; }
+  code, .k {
+    background: #F1F0EA; padding: 1px 7px; border-radius: 6px; font-size: .94em;
+    font-family: ui-monospace, "Consolas", monospace;
+  }
+  .ui { display: inline-block; padding: 0 8px; border: 1.5px solid #B8BEC6; border-radius: 6px; background: #fff; font-weight: 700; font-size: .95em; }
+  .box { background: #fff; border: 2px solid var(--line); border-radius: 14px; padding: 14px 18px; margin: 14px 0; }
+  .box.warn { border-color: #FFC9C9; background: #FFF5F5; }
+  .box.tip  { border-color: #B2F2BB; background: #F4FCF5; }
+  .box.info { border-color: #A5D8FF; background: #F3F9FF; }
+  .box > b:first-child { display: block; margin-bottom: 2px; }
+  table { border-collapse: collapse; width: 100%; background: #fff; margin: 12px 0; font-size: 15px; }
+  th, td { border: 1px solid var(--line); padding: 8px 10px; text-align: left; vertical-align: top; }
+  th { background: #FFF3C4; }
+  .toc { background: #fff; border: 2px solid var(--line); border-radius: 14px; padding: 12px 20px; }
+  .toc ol { margin: 6px 0; }
+  .flow { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 12px 0; }
+  .flow span { background: #fff; border: 2px solid var(--line); border-radius: 10px; padding: 6px 12px; font-weight: 700; }
+  .flow i { font-style: normal; color: var(--sub); }
+  pre { background: #fff; border: 2px solid var(--line); border-radius: 10px; padding: 12px; overflow-x: auto; font-size: 14px; line-height: 1.6; }
+  @media print { h2 { break-after: avoid; } .box { break-inside: avoid; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>😊 きもちボード　セットアップ手順</h1>
+<p class="lead">特別支援学校・支援学級向け「がんばったこと」と「きもち」を選んで、大きな画面と音声で伝えるアプリです。<br>
+プログラミングの知識がなくても、この手順どおりに進めれば 30分ほどで使えるようになります。</p>
+
+<div class="toc">
+  <b>もくじ</b>
+  <ol>
+    <li><a href="#s0">はじめに（しくみ・ファイル）</a></li>
+    <li><a href="#s1">スプレッドシートを作る</a></li>
+    <li><a href="#s2">Apps Script（GAS）にコードを貼る</a></li>
+    <li><a href="#s3">サンプルデータを作る（初回の許可）</a></li>
+    <li><a href="#s4">ウェブアプリとして公開（デプロイ）する</a></li>
+    <li><a href="#s5">iPad で開く・URLを設定する</a></li>
+    <li><a href="#s6">ホーム画面に追加して全画面で使う</a></li>
+    <li><a href="#s7">ボタン（教科・気持ち）を編集する／写真を使う</a></li>
+    <li><a href="#s8">先生用せってい画面の使い方</a></li>
+    <li><a href="#s9">こまったとき</a></li>
+  </ol>
+</div>
+
+<!-- ================================================= -->
+<h2 id="s0">0. はじめに</h2>
+
+<h3>しくみ</h3>
+<div class="flow">
+  <span>📊 スプレッドシート<br><small>ボタンの中身を書く</small></span><i>→</i>
+  <span>⚙️ Apps Script<br><small>データを配る</small></span><i>→</i>
+  <span>📱 iPad のアプリ画面<br><small>大きなボタン＋読み上げ</small></span>
+</div>
+<p>先生はスプレッドシートを編集するだけで、iPad のボタンが変わります（アプリを開き直すと反映）。</p>
+
+<h3>使うファイル（3つ）</h3>
+<table>
+  <tr><th>ファイル</th><th>役割</th></tr>
+  <tr><td><code>Code.gs</code></td><td>Apps Script に貼るサーバー側のコード</td></tr>
+  <tr><td><code>index.html</code></td><td>児童が使うアプリ画面（Apps Script にも貼ります）</td></tr>
+  <tr><td><code>セットアップ手順.html</code></td><td>このページ</td></tr>
+</table>
+
+<div class="box tip"><b>💡 ファイルの中身をコピーするには</b>
+ファイルを右クリック →「プログラムから開く」→「メモ帳」で開き、<span class="k">Ctrl</span>+<span class="k">A</span>（全部選択）→ <span class="k">Ctrl</span>+<span class="k">C</span>（コピー）します。</div>
+
+<div class="box tip"><b>💡 設定なしで使いたい先生へ</b>
+写真入りの完成版が GitHub Pages で公開されている場合は、その URL を iPad で開くだけで使えます（この手順は不要です）。<br>
+この手順書は「自分の学校用に、ボタンや写真を自由に変えたい」先生向けです。</div>
+
+<div class="box info"><b>💡 まず動きだけ見たいとき</b>
+<code>index.html</code> をダブルクリックしてブラウザで開くと、サンプルデータで動きます（スプレッドシートなしで試せます）。</div>
+
+<!-- ================================================= -->
+<h2 id="s1">1. スプレッドシートを作る</h2>
+<ol>
+  <li>パソコンで Google ドライブ（<code>drive.google.com</code>）を開きます。<br>
+    ※ 学校から配布された Google アカウント、または個人アカウントでログインします（<a href="#s4-warn">4. の注意</a>も読んでください）。</li>
+  <li>左上の <span class="ui">＋ 新規</span> → <span class="ui">Google スプレッドシート</span> → <span class="ui">空白のスプレッドシート</span> をクリック。</li>
+  <li>左上の「無題のスプレッドシート」をクリックして、名前を <b>きもちボード</b> に変えます。</li>
+</ol>
+<p>シートの中身（列）は、<a href="#s3">3.</a> でボタン1つで自動作成できるので、今は空のままでOKです。<br>
+自分で作る場合は、シート名を <code>master</code> にして、1行目に次の見出しを入れてください。</p>
+
+<table>
+  <tr><th>A: id</th><th>B: category</th><th>C: name</th><th>D: emoji</th><th>E: imageUrl</th><th>F: yomi</th><th>G: color</th><th>H: show</th></tr>
+  <tr><td>s01</td><td>教科</td><td>こくご</td><td>📖</td><td></td><td></td><td></td><td>☑</td></tr>
+  <tr><td>s07</td><td>教科</td><td>じりつ</td><td>🧩</td><td></td><td>じりつかつどう</td><td></td><td>☑</td></tr>
+  <tr><td>s08</td><td>教科</td><td>きゅうしょく</td><td>🍚</td><td>https://drive.google.com/file/d/…/view</td><td></td><td></td><td>☑</td></tr>
+  <tr><td>f01</td><td>気持ち</td><td>たのしかった</td><td>😄</td><td></td><td></td><td>#FFD43B</td><td>☑</td></tr>
+  <tr><td>f04</td><td>気持ち</td><td>むずかしかった</td><td>🤔</td><td></td><td></td><td>#74C0FC</td><td>☑</td></tr>
+</table>
+<p>列の意味は <a href="#s7">7.</a> で説明しています。</p>
+
+<!-- ================================================= -->
+<h2 id="s2">2. Apps Script（GAS）にコードを貼る</h2>
+<ol>
+  <li>スプレッドシートのメニューで <span class="ui">拡張機能</span> → <span class="ui">Apps Script</span> をクリック。新しいタブでエディタが開きます。</li>
+  <li>左上の「無題のプロジェクト」をクリックして、名前を <b>きもちボード</b> に変えます。</li>
+  <li><b>コード.gs に貼る：</b> 最初から開いている <code>コード.gs</code> の中身（<code>function myFunction() {…}</code>）を<b>全部消して</b>、<code>Code.gs</code> の中身を貼りつけます。</li>
+  <li><b>index を作る：</b> 左の「ファイル」の横の <span class="ui">＋</span> → <span class="ui">HTML</span> をクリックし、名前に <b>index</b> と入力して Enter（自動で <code>index.html</code> になります）。
+    <br>中身を全部消して、<code>index.html</code> の中身を貼りつけます。</li>
+  <li>上の <span class="ui">💾（プロジェクトを保存）</span> をクリック（または <span class="k">Ctrl</span>+<span class="k">S</span>）。</li>
+</ol>
+<div class="box warn"><b>⚠ 名前はまちがえずに</b>
+HTML ファイルの名前は必ず <b>index</b>（小文字）にしてください。ちがう名前だとアプリ画面が表示されません。</div>
+
+<!-- ================================================= -->
+<h2 id="s3">3. サンプルデータを作る（初回だけ「許可」が必要）</h2>
+<ol>
+  <li>エディタ上部の関数えらび（「myFunction」などと表示されている所）で <b>setupSampleSheet</b> を選び、<span class="ui">▷ 実行</span> をクリック。</li>
+  <li>「承認が必要です」と出たら <span class="ui">権限を確認</span> をクリックし、自分のアカウントを選びます。</li>
+  <li>「このアプリは Google で確認されていません」と出たら：<br>
+    左下の <span class="ui">詳細</span> → <span class="ui">きもちボード（安全ではないページ）に移動</span> → <span class="ui">許可</span>（または「すべて選択」にチェックして「続行」）。</li>
+  <li>「実行完了」と出たら、スプレッドシートのタブに戻ります。<b>master</b> シートにサンプルの教科・気持ちが入っていれば成功です。</li>
+</ol>
+<div class="box info"><b>ℹ「安全ではないページ」と出るのはなぜ？</b>
+自分で作ったスクリプトは Google の審査を受けていないため、必ずこの表示が出ます。ここで許可するのは「<b>自分が作ったスクリプトが、自分のスプレッドシートを読み書きすること</b>」です。コードの中身は、このスプレッドシートの読み書き以外のことはしていません。<br>
+※ 学校のアカウントで「管理者によってブロックされています」と出る場合は、<a href="#s9">9. こまったとき</a>を見てください。</div>
+<p>次回からは、スプレッドシートを開き直すとメニューに <span class="ui">きもちボード</span> が増え、「サンプルデータを作る」「データの読みこみテスト」がそこから実行できます。</p>
+
+<!-- ================================================= -->
+<h2 id="s4">4. ウェブアプリとして公開（デプロイ）する</h2>
+<ol>
+  <li>エディタ右上の <span class="ui">デプロイ</span> → <span class="ui">新しいデプロイ</span> をクリック。</li>
+  <li>「種類の選択」の横の <span class="ui">⚙（歯車）</span> → <span class="ui">ウェブアプリ</span> を選びます。</li>
+  <li>次のように設定します。
+    <table>
+      <tr><th>項目</th><th>設定</th></tr>
+      <tr><td>説明</td><td>きもちボード（なんでもOK）</td></tr>
+      <tr><td>次のユーザーとして実行</td><td><b>自分</b></td></tr>
+      <tr><td>アクセスできるユーザー</td><td><b>全員</b>（下の注意を読んでください）</td></tr>
+    </table>
+  </li>
+  <li><span class="ui">デプロイ</span> をクリック。（ここで再び許可を求められたら、3. と同じように許可します）</li>
+  <li>「ウェブアプリ」の <b>URL</b>（<code>https://script.google.com/macros/s/…/exec</code>）が表示されるので、<span class="ui">コピー</span> してメモ帳などに保存しておきます。<b>これがアプリのURLです。</b></li>
+</ol>
+
+<div class="box warn" id="s4-warn"><b>⚠「アクセスできるユーザー：全員」の注意点</b>
+<ul>
+  <li>「全員」にすると、<b>URLを知っている人ならだれでも</b>ログインなしで、ボタンの中身（教科名・気持ち・画像URL）を見ることができます。URLは推測できないほど長いので普通は見つかりませんが、<b>URLを学校外に公開しない</b>でください。</li>
+  <li>スプレッドシートの <b>master シートには、児童の名前・顔写真などの個人情報を入れない</b>でください。（シート全体が公開されるわけではありませんが、アプリで表示するデータは見られる可能性があります）</li>
+  <li>「記録」機能をオンにした場合、記録されるのは「日時・教科・気持ち」だけです。記録シート（log）の中身はURLからは見えません。</li>
+  <li>学校の Google Workspace では、管理者の設定で「全員」が選べないことがあります。その場合は「<b>（学校名）内の全員</b>」を選び、iPad の Safari でも学校のアカウントにログインしておけば、<a href="#s5">5. の方法A</a>で使えます。</li>
+</ul>
+</div>
+
+<div class="box tip"><b>💡 あとでコードを直したとき（URLを変えずに更新する方法）</b>
+<span class="ui">デプロイ</span> → <span class="ui">デプロイを管理</span> → 右上の <span class="ui">✏️（編集）</span> → 「バージョン」を <b>新バージョン</b> にして <span class="ui">デプロイ</span>。<br>
+※ 「新しいデプロイ」をすると URL が変わってしまうので注意。<br>
+※ <b>スプレッドシートの中身を変えただけなら、デプロイし直す必要はありません。</b></div>
+
+<!-- ================================================= -->
+<h2 id="s5">5. iPad で開く・URLを設定する</h2>
+
+<h3>方法A（おすすめ・かんたん）：GAS の URL をそのまま開く</h3>
+<ol>
+  <li>4. でコピーした URL（…/exec）を iPad に送ります。<br>
+    例：Google Classroom の資料に貼る／自分あてにメールする／QRコードにして読み取る（Chrome の「共有 → QRコードを作成」などで作れます）。</li>
+  <li>iPad の <b>Safari</b> でその URL を開くと、すぐにアプリが表示されます。<b>URLの設定は不要</b>です。</li>
+</ol>
+<div class="box info"><b>ℹ 方法Aの小さなちがい</b>
+個人の Google アカウントで作った場合、画面の上に「このアプリケーションは Google Apps Script のユーザーによって作成されたものです」という灰色の帯が出ることがあります。使うことに問題はありません。気になる場合は方法Bを使います。</div>
+
+<h3>方法B：index.html を別の場所に置いて、URLを設定する</h3>
+<p>index.html を GitHub Pages などの Web サーバーに置く方法です。帯が出ず、ホーム画面から完全な全画面で使えます。</p>
+<p>URL の設定方法は2通りあります：</p>
+<ol>
+  <li><b>アプリの設定画面で入力（端末ごと）：</b> アプリを開き、右上の ⚙️ を <b>1.5秒ながおし</b> →「GAS ウェブアプリの URL」に貼りつけ →「🔄 データを読みこむ」。<br>
+    ※ アプリの URL の最後に <code>?settings=1</code> をつけて開くと、最初から設定画面が開きます。</li>
+  <li><b>HTML に書きこむ（全端末で設定不要）：</b> index.html をメモ帳で開き、次の行を探して '' の中に URL を貼ります。
+<pre>const DEFAULT_API_URL = '';
+      ↓
+const DEFAULT_API_URL = 'https://script.google.com/macros/s/XXXXXXXX/exec';</pre>
+  </li>
+</ol>
+<details class="box"><summary><b>GitHub Pages に置く手順（参考）</b></summary>
+<ol>
+  <li><code>github.com</code> で無料アカウントを作り、<span class="ui">New repository</span> で公開（Public）リポジトリを作ります。</li>
+  <li><span class="ui">Add file</span> → <span class="ui">Upload files</span> で <code>index.html</code> をアップロード → <span class="ui">Commit changes</span>。</li>
+  <li><span class="ui">Settings</span> → <span class="ui">Pages</span> → Branch を <b>main</b> にして <span class="ui">Save</span>。数分後に表示される URL がアプリの URL です。</li>
+</ol>
+※ 公開リポジトリは誰でも見られます。index.html に個人情報は含まれていませんが、GAS の URL を書きこんだ場合はその URL も見えることになります。
+</details>
+
+<!-- ================================================= -->
+<h2 id="s6">6. ホーム画面に追加して全画面で使う（iPad / Safari）</h2>
+<ol>
+  <li>Safari でアプリを開いた状態で、アドレスバー横の <span class="ui">共有（□に↑）</span> をタップ。</li>
+  <li>メニューを下にスクロールして <span class="ui">ホーム画面に追加</span> をタップ。<br>
+    「Webアプリとして開く」というスイッチが出る場合は <b>オン</b> にします。</li>
+  <li>名前を「きもちボード」にして <span class="ui">追加</span>。ホーム画面のアイコンから開くと、アドレスバーのない大きな画面で使えます。</li>
+</ol>
+
+<div class="box tip"><b>💡 現場で使うコツ</b>
+<ul>
+  <li><b>アクセスガイド</b>（ほかのアプリに移れなくする機能）：<br>
+    「設定」→「アクセシビリティ」→「アクセスガイド」をオン → アプリを開いてトップボタン（またはホームボタン）を<b>3回すばやく押す</b> →「開始」。終了も3回押してパスコードを入力します。</li>
+  <li><b>音が出ないとき</b>：iPad の音量を上げる。消音モード（ベルに斜線）になっていないか確認。最初の1回はボタンをタップしてから読み上げが始まります（iPad の仕組み上、自動では鳴りません）。</li>
+  <li><b>こえの種類</b>：「設定」→「アクセシビリティ」→「読み上げコンテンツ」→「声」→「日本語」で、きれいな声（Kyoko・O-ren など）をダウンロードしておくと聞き取りやすくなります。アプリの設定画面で選べます。</li>
+  <li><b>自動ロック</b>：授業中に画面が消えないよう、「設定」→「画面表示と明るさ」→「自動ロック」を長めに。</li>
+  <li><b>向き</b>：横向きがおすすめ（ボタンが4列で1画面に収まります）。縦向きでも使えます。</li>
+</ul>
+</div>
+
+<!-- ================================================= -->
+<h2 id="s7">7. ボタン（教科・気持ち）を編集する／写真を使う</h2>
+<p>スプレッドシートの <b>master</b> シートを編集して、iPad のアプリを開き直すと反映されます（設定画面の「🔄 データを読みこむ」でも反映）。<b>上から順番</b>にボタンが並びます。</p>
+
+<table>
+  <tr><th>列</th><th>意味</th><th>書き方の例</th></tr>
+  <tr><td>id</td><td>番号（重ならなければ何でもOK。空でも動きます）</td><td>s01, f01</td></tr>
+  <tr><td>category</td><td><b>教科</b> か <b>気持ち</b>（プルダウンで選べます）</td><td>教科 ／ 気持ち</td></tr>
+  <tr><td>name</td><td>ボタンと結果に表示される言葉</td><td>こくご ／ たのしかった</td></tr>
+  <tr><td>emoji</td><td>絵文字（画像がないとき・読みこめないときに表示）<br>Windows では <span class="k">Win</span>+<span class="k">.</span> で絵文字を入力できます</td><td>📖 ／ 😄</td></tr>
+  <tr><td>imageUrl</td><td>写真・イラストのURL（空なら絵文字）</td><td>Googleドライブの共有リンク</td></tr>
+  <tr><td>yomi</td><td>読み上げの読み方（空なら name を読む）。漢字の読みまちがい対策に</td><td>じりつかつどう</td></tr>
+  <tr><td>color</td><td>ボタンのわくの色（空なら自動）</td><td>#FFD43B</td></tr>
+  <tr><td>show</td><td>チェックを外すと、そのボタンをかくします</td><td>☑ ／ ☐</td></tr>
+</table>
+
+<div class="box tip"><b>💡 よくある使い方</b>
+<ul>
+  <li>「きゅうしょく」「そうじ」「あさのかい」など<b>活動</b>も category は「教科」でOKです。</li>
+  <li>選択肢が多いと迷う児童には、show のチェックを外して <b>数を減らす</b>と選びやすくなります。</li>
+  <li>結果の文は設定画面で変えられます（例：「{教科}の じかん、{気持ち}！」）。</li>
+</ul>
+</div>
+
+<h3>写真（Googleドライブ）を使う手順</h3>
+<ol>
+  <li>Google ドライブに画像（JPG / PNG）をアップロードします。</li>
+  <li>画像を右クリック → <span class="ui">共有</span> → <span class="ui">共有</span>。</li>
+  <li>「一般的なアクセス」を <b>リンクを知っている全員</b>（閲覧者）に変更 → <span class="ui">リンクをコピー</span>。</li>
+  <li>コピーしたリンク（<code>https://drive.google.com/file/d/…/view?usp=sharing</code>）を、そのまま <b>imageUrl</b> 列に貼ります。表示用のURLへの変換はアプリが自動で行います。</li>
+</ol>
+<div class="box warn"><b>⚠ 写真の注意</b>
+<ul>
+  <li>児童の顔が写った写真は使わないでください（リンクを知っている人は見られる状態になるため）。教室・教材・給食のイラストなどがおすすめです。</li>
+  <li>学校のアカウントでは「リンクを知っている全員」が選べないことがあります。その場合は画像が表示されず、<b>自動的に絵文字が表示</b>されます（アプリは止まりません）。</li>
+  <li>画像はなるべく小さめ（横 1000px 以下）にすると表示が速くなります。</li>
+</ul>
+</div>
+
+<!-- ================================================= -->
+<h2 id="s8">8. 先生用せってい画面の使い方</h2>
+<p>アプリ右上のうすい ⚙️ を <b>1.5秒ながおし</b> すると開きます（児童が触ってもすぐには開かないようにしています）。パソコンでは <span class="k">Shift</span>+<span class="k">S</span> でも開けます。設定は <b>その端末だけ</b> に保存されます。</p>
+<table>
+  <tr><th>項目</th><th>内容</th></tr>
+  <tr><td>GAS の URL ／ データを読みこむ</td><td>方法Bのときに URL を入力。読みこみ状態（件数・エラー）も表示されます</td></tr>
+  <tr><td>自動で読み上げる</td><td>気持ちを選んだら、すぐ結果の文を読み上げます</td></tr>
+  <tr><td>名前を読み上げる</td><td>ボタンを押したとき、その言葉を読み上げます（文字が読めない児童に）</td></tr>
+  <tr><td>こえ・はやさ・高さ</td><td>聞き取りやすく調整できます。「ためしに読む」で確認</td></tr>
+  <tr><td>ボタンの列の数</td><td>列を減らすとボタンが大きくなります（手先の操作が難しい児童に）</td></tr>
+  <tr><td>アニメーションを少なく</td><td>動きへの刺激に敏感な児童に</td></tr>
+  <tr><td>結果の文のかたち</td><td><code>{教科}</code> <code>{気持ち}</code> が選んだ言葉に入れかわります</td></tr>
+  <tr><td>記録する</td><td>オンにすると、スプレッドシートに「log」シートができ、日時・教科・気持ちが記録されます</td></tr>
+</table>
+<div class="box info"><b>ℹ 誤タップをふせぐ工夫</b>
+画面が切りかわった直後（約0.6秒）のタップは受けつけません。連打しても2つ選ばれることはありません。選んだボタンは大きく強調され、ほかのボタンはうすくなります。</div>
+<div class="box info"><b>ℹ 通信が切れても大丈夫</b>
+一度読みこんだデータは iPad に保存されるので、次に開いたときは通信を待たずにすぐ表示されます（裏で最新データに更新します）。</div>
+
+<!-- ================================================= -->
+<h2 id="s9">9. こまったとき</h2>
+<table>
+  <tr><th>こまったこと</th><th>確認すること</th></tr>
+  <tr><td>サンプルのボタンしか出ない</td><td>設定画面の状態表示を見ます。<br>
+    ・方法B：URL が <code>/exec</code> で終わっているか（<code>/dev</code> は不可）<br>
+    ・デプロイの「アクセスできるユーザー」が「全員」か<br>
+    ・パソコンのブラウザで <code>（URL）?api=data</code> を開き、<code>{"ok":true,…}</code> と表示されるか</td></tr>
+  <tr><td><code>?api=data</code> で「シート master が見つかりません」</td><td>シート名が <b>master</b>（半角小文字）になっているか。<a href="#s3">3.</a> の setupSampleSheet を実行してください</td></tr>
+  <tr><td>スプレッドシートを変えたのに反映されない</td><td>アプリを開き直す、または設定画面の「🔄 データを読みこむ」。それでもだめなら ?api=data で確認</td></tr>
+  <tr><td>コードを直したのに変わらない</td><td>「デプロイを管理」→ 編集 →「新バージョン」でデプロイし直す（<a href="#s4">4.</a> のヒント）</td></tr>
+  <tr><td>「管理者によってブロックされています」</td><td>学校の管理者が Apps Script を制限しています。情報担当の先生・管理者に相談するか、個人の Google アカウントで作成してください（その場合も個人情報は入れないでください）</td></tr>
+  <tr><td>「全員」が選べない</td><td>学校アカウントの制限です。「（学校名）内の全員」を選び、iPad の Safari で学校アカウントにログインして方法Aで開きます</td></tr>
+  <tr><td>画像が出ない（絵文字になる）</td><td>ドライブの共有が「リンクを知っている全員」になっているか。学校アカウントでは制限されることがあります</td></tr>
+  <tr><td>音が出ない</td><td>音量・消音モード・Bluetooth スピーカーの接続先を確認。設定画面の「ためしに読む」でテスト</td></tr>
+  <tr><td>読み方がおかしい</td><td>スプレッドシートの <b>yomi</b> 列にひらがなで読み方を書きます</td></tr>
+  <tr><td>ボタンが小さい／多すぎる</td><td>設定画面で列の数を減らす。show のチェックでボタンの数を減らす</td></tr>
+</table>
+
+<p style="margin-top:40px;color:var(--sub);font-size:14px">きもちボード ／ 構成：HTML + JavaScript（フロント）＋ Google スプレッドシート + Google Apps Script（データ）</p>
+</div>
+</body>
+</html>
