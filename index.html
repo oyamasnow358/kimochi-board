@@ -308,6 +308,64 @@
   .hide-list h4 { grid-column: 1 / -1; margin: 10px 0 2px; font-size: 16px; }
   .hide-list label { display: flex; align-items: center; gap: 10px; min-height: 44px; }
 
+  /* 先生がえらんだ少ないカード：とても大きく表示 */
+  .grid.few { overflow: hidden; }
+  .grid.few .card { border-width: 10px; border-radius: 40px; }
+  .grid.few .pic .emoji { font-size: clamp(72px, min(14vw, 22vh), 220px); }
+  .grid.few .pic .letter { font-size: clamp(60px, min(10vw, 16vh), 140px); }
+  .grid.few .card .label { font-size: clamp(30px, min(5vw, 7vh), 68px); }
+  .grid.few .pic img { border-radius: 24px; }
+
+  /* えらばせるカードの設定画面 */
+  .modal.top { z-index: 55; }
+  .panel.wide { width: min(100%, 1000px); }
+  .seg { display: flex; gap: 8px; margin: 14px 0 10px; }
+  .seg button {
+    flex: 1; padding: 14px 8px; font-size: 18px; font-weight: 700; border-radius: 12px;
+    border: 2px solid #CED4DA; background: #fff;
+  }
+  .seg button.on { background: var(--ink); border-color: var(--ink); color: #fff; }
+  .tray-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 6px; }
+  .tray {
+    display: flex; gap: 10px; flex-wrap: wrap; align-items: center; min-height: 76px;
+    margin: 6px 0 14px; padding: 10px; border-radius: 14px;
+    background: #FFF9DB; border: 2px dashed #FAB005;
+  }
+  .tray .none { color: var(--sub); font-size: 15px; }
+  .tchip {
+    --c: #FFD43B;
+    display: flex; align-items: center; gap: 6px; padding: 4px 6px 4px 4px;
+    background: #fff; border: 3px solid var(--c); border-radius: 12px; font-weight: 700;
+  }
+  .tchip .n {
+    width: 26px; height: 26px; border-radius: 50%; background: var(--ink); color: #fff;
+    display: grid; place-items: center; font-size: 14px;
+  }
+  .tchip .pic { width: 40px; height: 40px; }
+  .tchip .pic .emoji { font-size: 28px; }
+  .tchip .pic .letter { font-size: 18px; }
+  .tchip button { border: none; background: #F1F3F5; border-radius: 8px; width: 36px; height: 36px; font-size: 15px; }
+  .pick-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 10px; }
+  .pick-grid h4 { grid-column: 1 / -1; margin: 12px 0 0; font-size: 16px; }
+  .pcard {
+    position: relative; display: flex; flex-direction: column; align-items: center; gap: 4px;
+    padding: 10px 6px; border: 3px solid #E9ECEF; border-radius: 14px; background: #fff;
+    font-size: 15px; font-weight: 700; line-height: 1.3; overflow-wrap: anywhere;
+  }
+  .pcard .pic { width: 56px; height: 56px; }
+  .pcard .pic .emoji { font-size: 40px; }
+  .pcard .pic .letter { font-size: 24px; }
+  .pcard.on { border-color: var(--ink); background: #FFF9DB; }
+  .pcard .badge {
+    position: absolute; top: -9px; right: -9px; width: 30px; height: 30px; border-radius: 50%;
+    background: var(--ink); color: #fff; display: grid; place-items: center; font-size: 15px;
+  }
+  .pick-foot {
+    position: sticky; bottom: -28px; margin: 18px -8px -8px; padding: 12px 8px;
+    background: #fff; border-top: 1px solid #E9ECEF;
+    display: flex; gap: 10px; flex-wrap: wrap; justify-content: flex-end;
+  }
+
   .toast {
     position: fixed; left: 50%; bottom: 28px; transform: translateX(-50%);
     background: rgba(17,24,39,.9); color: #fff; padding: 14px 22px; border-radius: 14px;
@@ -380,6 +438,14 @@
       <button class="btn ok" type="button" data-close>とじる</button>
     </div>
     <p class="note">この画面は、右上の ⚙️ を 1.5秒 ながおし すると開きます。変更はすぐに保存されます（この端末のみ）。</p>
+
+    <h3>えらばせるカード（しぼりこみ）</h3>
+    <p class="note">選択肢が多いと むずかしい子には、先生がカードを 2〜3まい などに しぼって 大きく出せます。えらんでいないときは ぜんぶの中から えらびます。</p>
+    <div class="status" id="pickStatus">―</div>
+    <div class="btns">
+      <button class="btn primary" type="button" id="btnOpenPick">🎯 カードを えらぶ</button>
+      <button class="btn" type="button" id="btnClearPick">しぼりこみを やめる（ぜんぶ出す）</button>
+    </div>
 
     <h3>データ（スプレッドシート）</h3>
     <div id="urlBlock">
@@ -465,6 +531,30 @@
   </div>
 </div>
 
+<!-- 先生用：えらばせるカードを決める画面 -->
+<div class="modal top" id="pickModal" role="dialog" aria-modal="true" aria-labelledby="pickTitle">
+  <div class="panel wide">
+    <div class="panel-head">
+      <h2 id="pickTitle">🎯 えらばせるカード</h2>
+      <button class="btn" type="button" id="pickClose">もどる</button>
+    </div>
+    <p class="note">下のカードを タップした順に、子どもの画面に ならびます（もう一度タップで はずす）。2まい・3まい なら とても大きく出ます。</p>
+    <div class="seg">
+      <button type="button" data-pickcat="subject">① なにを した？（教科・行事）</button>
+      <button type="button" data-pickcat="feeling">② きもち</button>
+    </div>
+    <div class="tray-head">
+      <b>えらんだカード：<span id="pickCount"></span></b>
+      <button class="btn warn" type="button" id="pickClearCat">ぜんぶ はずす</button>
+    </div>
+    <div class="tray" id="pickTray"></div>
+    <div class="pick-grid" id="pickGrid"></div>
+    <div class="pick-foot">
+      <button class="btn ok" type="button" id="pickStart">▶ この カードで はじめる</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <!-- 写真入りの内蔵データ（GitHub Pages 版で使用。無くても動きます） -->
@@ -492,6 +582,7 @@
     columns: 'auto',
     calm: false,
     level: '',
+    pick: { subject: [], feeling: [] },   // 先生がえらんだカード（空なら ぜんぶ）
     template: '{教科}は\n{気持ち}',
     log: false
   };
@@ -540,6 +631,10 @@
 
   let settings = Object.assign({}, DEFAULT_SETTINGS, load(LS_SETTINGS) || {});
   if (!settings.apiUrl && DEFAULT_API_URL) settings.apiUrl = DEFAULT_API_URL;
+  if (!settings.pick || typeof settings.pick !== 'object') settings.pick = { subject: [], feeling: [] };
+  ['subject', 'feeling'].forEach(function (c) {
+    if (!Array.isArray(settings.pick[c])) settings.pick[c] = [];
+  });
   // 以前の文のかたち（「がんばった」が勝手に入る）は新しい形におきかえる
   if (settings.template === '{教科}を\nがんばった！\n{気持ち}！') {
     settings.template = DEFAULT_SETTINGS.template;
@@ -811,7 +906,47 @@
     return gs;
   }
 
+  // 先生がえらんだカード（えらんだ順）。えらんでいなければ null
+  function pickedItems(cat) {
+    const keys = (settings.pick && settings.pick[cat]) || [];
+    if (!keys.length) return null;
+    const src = (cat === 'subject' ? state.data.subjects : state.data.feelings)
+      .concat(normalizeItems(custom.items.filter(function (x) { return x.cat === cat; })));
+    const out = [];
+    keys.forEach(function (k) {
+      const it = src.find(function (x) { return itemKey(cat, x) === k; });
+      if (it && out.indexOf(it) === -1) out.push(it);
+    });
+    return out.length ? out : null;
+  }
+
+  // カードが少ないときは列を減らして大きく出す
+  function applyFew(grid, n) {
+    const few = n > 0 && n <= 6;
+    grid.classList.toggle('few', few);
+    if (few) grid.style.setProperty('--cols', n <= 3 ? n : (n === 4 ? 2 : 3));
+    else if (settings.columns && settings.columns !== 'auto') grid.style.setProperty('--cols', settings.columns);
+    else grid.style.removeProperty('--cols');
+  }
+
   function renderLists() {
+    const pickedS = pickedItems('subject');
+    const pickedF = pickedItems('feeling');
+    if (pickedS) {
+      $('#groupTabs').hidden = true;
+      $('#groupTabs').innerHTML = '';
+      renderGrid($('#gridSubjects'), pickedS, pickSubject, '');
+      applyFew($('#gridSubjects'), pickedS.length);
+    } else {
+      renderSubjectsAll();
+      applyFew($('#gridSubjects'), 0);
+    }
+    renderGrid($('#gridFeelings'), pickedF || visibleList('feeling'), pickFeeling,
+      'ボタンがありません。\n先生：スプレッドシートに「気持ち」の行を追加してください。');
+    applyFew($('#gridFeelings'), pickedF ? pickedF.length : 0);
+  }
+
+  function renderSubjectsAll() {
     const subs = visibleList('subject');
     const groups = groupsOf(subs);
     const tabs = $('#groupTabs');
@@ -840,8 +975,6 @@
     }
     renderGrid($('#gridSubjects'), shown, pickSubject,
       'ボタンがありません。\n先生：スプレッドシートに「教科」の行を追加してください。');
-    renderGrid($('#gridFeelings'), visibleList('feeling'), pickFeeling,
-      'ボタンがありません。\n先生：スプレッドシートに「気持ち」の行を追加してください。');
   }
 
   function renderChosenChip() {
@@ -1124,6 +1257,125 @@
     setStatus(text, !!state.lastError);
   }
 
+  /* ---------- えらばせるカード（しぼりこみ） ---------- */
+  let pickCat = 'subject';
+
+  function setPick(cat, keys) {
+    const np = { subject: settings.pick.subject.slice(), feeling: settings.pick.feeling.slice() };
+    np[cat] = keys;
+    settings.pick = np;
+    save(LS_SETTINGS, settings);
+    renderLists();
+  }
+
+  function pickSummary(cat) {
+    const items = pickedItems(cat);
+    if (!items) return 'ぜんぶ';
+    return items.length + 'まい（' + items.map(function (it) { return it.name; }).join('・') + '）';
+  }
+
+  function updatePickStatus() {
+    $('#pickStatus').textContent =
+      '① なにを した？：' + pickSummary('subject') + '\n② きもち：' + pickSummary('feeling');
+  }
+
+  function renderPicker() {
+    $$('[data-pickcat]').forEach(function (b) {
+      b.classList.toggle('on', b.getAttribute('data-pickcat') === pickCat);
+    });
+    const items = pickedItems(pickCat) || [];
+    const keys = items.map(function (it) { return itemKey(pickCat, it); });
+    $('#pickCount').textContent = items.length ? items.length + ' まい' : 'なし（子どもは ぜんぶの中から えらびます）';
+
+    // えらんだカード（ならびかえ・はずす）
+    const tray = $('#pickTray');
+    tray.innerHTML = '';
+    if (!items.length) {
+      const n = document.createElement('span');
+      n.className = 'none';
+      n.textContent = '下のカードを タップすると、ここに ならびます';
+      tray.appendChild(n);
+    }
+    items.forEach(function (it, i) {
+      const chip = document.createElement('div');
+      chip.className = 'tchip';
+      chip.style.setProperty('--c', it.color);
+      const num = document.createElement('span');
+      num.className = 'n';
+      num.textContent = i + 1;
+      chip.appendChild(num);
+      chip.appendChild(makePic(it));
+      chip.appendChild(document.createTextNode(it.name));
+      [['◀', -1, 'まえへ'], ['▶', 1, 'うしろへ'], ['✕', 0, 'はずす']].forEach(function (a) {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.textContent = a[0];
+        b.setAttribute('aria-label', a[2]);
+        b.addEventListener('click', function () {
+          const k = keys.slice();
+          if (a[1] === 0) k.splice(i, 1);
+          else {
+            const j = i + a[1];
+            if (j < 0 || j >= k.length) return;
+            const t = k[i]; k[i] = k[j]; k[j] = t;
+          }
+          setPick(pickCat, k);
+          renderPicker();
+        });
+        chip.appendChild(b);
+      });
+      tray.appendChild(chip);
+    });
+
+    // えらべるカードの一覧
+    const grid = $('#pickGrid');
+    grid.innerHTML = '';
+    const list = visibleList(pickCat);
+    const sections = pickCat === 'subject'
+      ? groupsOf(list).map(function (g) { return [g, list.filter(function (it) { return groupOf(it) === g; })]; })
+      : [['きもち', list]];
+    sections.forEach(function (sec) {
+      if (sections.length > 1) {
+        const h = document.createElement('h4');
+        h.textContent = sec[0];
+        grid.appendChild(h);
+      }
+      sec[1].forEach(function (it) {
+        const key = itemKey(pickCat, it);
+        const idx = keys.indexOf(key);
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'pcard' + (idx !== -1 ? ' on' : '');
+        b.appendChild(makePic(it));
+        b.appendChild(document.createTextNode(it.name));
+        if (idx !== -1) {
+          const bd = document.createElement('span');
+          bd.className = 'badge';
+          bd.textContent = idx + 1;
+          b.appendChild(bd);
+        }
+        b.addEventListener('click', function () {
+          const k = keys.slice();
+          if (idx !== -1) k.splice(idx, 1); else k.push(key);
+          setPick(pickCat, k);
+          renderPicker();
+        });
+        grid.appendChild(b);
+      });
+    });
+  }
+
+  function openPicker() {
+    pickCat = 'subject';
+    renderPicker();
+    $('#pickModal').classList.add('open');
+    $('#pickModal').scrollTop = 0;
+  }
+  function closePicker() {
+    $('#pickModal').classList.remove('open');
+    updatePickStatus();
+  }
+
   /* ---------- ボタンをふやす・かくす・バックアップ ---------- */
   let newPhotoData = '';
 
@@ -1307,6 +1559,7 @@
     fillForm();
     loadVoices();
     updateStatus();
+    updatePickStatus();
     refreshEditor();
     $('#settingsModal').classList.add('open');
   }
@@ -1331,7 +1584,9 @@
     // パソコンでの確認用：キーボードの Shift + S でも開けます
     document.addEventListener('keydown', function (e) {
       if (e.shiftKey && (e.key === 'S' || e.key === 's') && !$('#settingsModal').classList.contains('open')) openSettings();
-      if (e.key === 'Escape') closeSettings();
+      if (e.key === 'Escape') {
+        if ($('#pickModal').classList.contains('open')) closePicker(); else closeSettings();
+      }
     });
   }
 
@@ -1381,6 +1636,25 @@
     $('#settingsModal').addEventListener('click', function (e) { if (e.target.id === 'settingsModal') closeSettings(); });
     $('#btnReload').addEventListener('click', function () { loadRemote(true); });
     $('#newCat').addEventListener('change', refreshEditor);
+    $('#btnOpenPick').addEventListener('click', openPicker);
+    $('#btnClearPick').addEventListener('click', function () {
+      settings.pick = { subject: [], feeling: [] };
+      save(LS_SETTINGS, settings);
+      renderLists();
+      updatePickStatus();
+      toast('ぜんぶの カードから えらぶように しました');
+    });
+    $$('[data-pickcat]').forEach(function (b) {
+      b.addEventListener('click', function () { pickCat = b.getAttribute('data-pickcat'); renderPicker(); });
+    });
+    $('#pickClearCat').addEventListener('click', function () { setPick(pickCat, []); renderPicker(); });
+    $('#pickClose').addEventListener('click', closePicker);
+    $('#pickModal').addEventListener('click', function (e) { if (e.target.id === 'pickModal') closePicker(); });
+    $('#pickStart').addEventListener('click', function () {
+      closePicker();
+      closeSettings();
+      resetForNext();
+    });
     $('#btnAddItem').addEventListener('click', addCustomItem);
     $('#newPhotoClear').addEventListener('click', function () { $('#newPhoto').value = ''; setPhotoPreview(''); });
     $('#newPhoto').addEventListener('change', function (e) {
@@ -1399,8 +1673,9 @@
     });
     $('#btnResetSettings').addEventListener('click', function () {
       if (!confirm('せっていを はじめの状態に もどしますか？（GAS の URL も消えます）')) return;
-      settings = Object.assign({}, DEFAULT_SETTINGS);
+      settings = Object.assign({}, DEFAULT_SETTINGS, { pick: { subject: [], feeling: [] } });
       save(LS_SETTINGS, settings);
+      renderLists();
       fillForm();
       applySettings();
       loadVoices();
