@@ -401,6 +401,14 @@
     <div class="btns"><button class="btn" type="button" id="btnTestVoice">🔊 ためしに読む</button></div>
 
     <h3>表示</h3>
+    <label class="row"><span>学部（この端末で出す教科・活動）</span>
+      <select data-key="level">
+        <option value="">すべて</option>
+        <option value="小">小学部</option>
+        <option value="中">中学部</option>
+        <option value="高">高等部</option>
+      </select>
+    </label>
     <label class="row"><span>ボタンの列の数</span>
       <select data-key="columns">
         <option value="auto">自動（画面の幅で決める）</option>
@@ -483,6 +491,7 @@
     pitch: 1.1,
     columns: 'auto',
     calm: false,
+    level: '',
     template: '{教科}は\n{気持ち}',
     log: false
   };
@@ -578,6 +587,7 @@
         imageUrl: String(it.imageUrl || it.image || '').trim(),
         yomi: String(it.yomi || '').trim(),
         group: String(it.group || '').trim(),
+        level: String(it.level || '').trim(),
         color: /^#[0-9a-f]{3,8}$/i.test(String(it.color || '').trim()) ? String(it.color).trim() : ''
       };
     }).filter(function (it) { return it.name; })
@@ -785,7 +795,11 @@
   // もとのデータ（かくしたものを除く）＋ この端末でふやしたボタン
   function visibleList(cat) {
     const src = cat === 'subject' ? state.data.subjects : state.data.feelings;
-    const base = src.filter(function (it) { return custom.hidden.indexOf(itemKey(cat, it)) === -1; });
+    const lv = settings.level;
+    const base = src.filter(function (it) {
+      if (lv && it.level && it.level.indexOf(lv) === -1) return false; // 学部でしぼる
+      return custom.hidden.indexOf(itemKey(cat, it)) === -1;
+    });
     const extra = normalizeItems(custom.items.filter(function (x) { return x.cat === cat; }));
     return base.concat(extra);
   }
@@ -1042,6 +1056,7 @@
       else g.style.removeProperty('--cols');
     });
     document.body.classList.toggle('calm', !!settings.calm);
+    if (state.data) renderLists();
     $('#rateVal').textContent = '×' + Number(settings.rate).toFixed(2);
     $('#pitchVal').textContent = '×' + Number(settings.pitch).toFixed(2);
   }
@@ -1196,7 +1211,11 @@
   function renderHideList() {
     const box = $('#hideList');
     box.innerHTML = '';
-    [['subject', '教科・活動・行事', state.data.subjects], ['feeling', '気持ち', state.data.feelings]].forEach(function (sec) {
+    const secs = groupsOf(state.data.subjects).map(function (g) {
+      return ['subject', g, state.data.subjects.filter(function (it) { return groupOf(it) === g; })];
+    });
+    secs.push(['feeling', '気持ち', state.data.feelings]);
+    secs.forEach(function (sec) {
       if (!sec[2].length) return;
       const h = document.createElement('h4');
       h.textContent = sec[1];
@@ -1214,7 +1233,8 @@
           renderLists();
         });
         lb.appendChild(cb);
-        lb.appendChild(document.createTextNode((it.emoji ? it.emoji + ' ' : '') + it.name));
+        lb.appendChild(document.createTextNode((it.emoji ? it.emoji + ' ' : '') + it.name +
+          (it.level && it.level !== '小中高' ? '（' + it.level.split('').join('・') + '）' : '')));
         box.appendChild(lb);
       });
     });

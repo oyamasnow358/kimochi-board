@@ -1,18 +1,15 @@
 このフォルダに写真を入れると、GitHub Pages 版のボタンに表示されます。
 
-■ ファイル名（data.js に書いてある名前と同じにする）
-  教科  : kokugo.jpg  sansu.jpg  seikatsu.jpg  ongaku.jpg  zukou.jpg
-          taiiku.jpg  jiritsu.jpg  kyushoku.jpg  souji.jpg  asobi.jpg
-  行事  : shakaitaiken.jpg  shukuhaku.jpg  shugakuryoko.jpg  ensoku.jpg
-          undokai.jpg  bunkasai.jpg  happyokai.jpg  koryukai.jpg  hanpukai.jpg
-  気持ち: tanoshikatta.jpg  dekita.jpg  ureshikatta.jpg  muzukashikatta.jpg
-          tsukareta.jpg  dokidoki.jpg  kanashikatta.jpg  iyadatta.jpg
+■ 手順
+  1. 写真をこのフォルダに入れる（ファイル名は半角英数字。例：kokugo.jpg）
+  2. data.js の その行に image: 'images/kokugo.jpg' を足す
+     例） { group: 'きょうか', name: 'こくご', emoji: '📖', image: 'images/kokugo.jpg', level: '小中高' },
+  ※ image が無い・読みこめないボタンは、自動で絵文字が表示されます
 
-  ※ PNG にしたい場合は data.js の image: の拡張子も .png に書きかえる
-  ※ ファイル名は半角英数字（日本語や空白は使わない）
-  ※ 写真が無い／名前がちがう場合は、自動で絵文字が表示されます
+■ 写真のコツ
+  ・横 600px 前後、1枚 200KB 以下くらいにすると iPad での表示が速い
+  ・正方形に近い写真・イラストだとボタンに収まりがよい
 
 ■ 注意（一般公開されます）
   ・児童の顔、個人が特定できるものは入れない
-  ・いらすと等は、利用規約で「Webでの再配布」が認められているものだけ
-  ・横 600px 前後、1枚 200KB 以下くらいにすると表示が速い
+  ・イラストは、利用規約で「Webでの再配布」が認められているものだけ

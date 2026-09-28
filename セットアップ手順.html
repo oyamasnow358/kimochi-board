@@ -108,12 +108,12 @@
 自分で作る場合は、シート名を <code>master</code> にして、1行目に次の見出しを入れてください。</p>
 
 <table>
-  <tr><th>A: id</th><th>B: category</th><th>C: name</th><th>D: emoji</th><th>E: imageUrl</th><th>F: yomi</th><th>G: color</th><th>H: show</th><th>I: group</th></tr>
-  <tr><td>s01</td><td>教科</td><td>こくご</td><td>📖</td><td></td><td></td><td></td><td>☑</td><td>まいにち</td></tr>
-  <tr><td>s07</td><td>教科</td><td>じりつ</td><td>🧩</td><td></td><td>じりつかつどう</td><td></td><td>☑</td><td>まいにち</td></tr>
-  <tr><td>s08</td><td>教科</td><td>きゅうしょく</td><td>🍚</td><td>https://drive.google.com/file/d/…/view</td><td></td><td></td><td>☑</td><td>まいにち</td></tr>
-  <tr><td>f01</td><td>気持ち</td><td>たのしかった</td><td>😄</td><td></td><td></td><td>#FFD43B</td><td>☑</td><td></td></tr>
-  <tr><td>f04</td><td>気持ち</td><td>むずかしかった</td><td>🤔</td><td></td><td></td><td>#74C0FC</td><td>☑</td><td></td></tr>
+  <tr><th>A: id</th><th>B: category</th><th>C: name</th><th>D: emoji</th><th>E: imageUrl</th><th>F: yomi</th><th>G: color</th><th>H: show</th><th>I: group</th><th>J: level</th></tr>
+  <tr><td>s01</td><td>教科</td><td>こくご</td><td>📖</td><td></td><td></td><td></td><td>☑</td><td>きょうか</td><td>小中高</td></tr>
+  <tr><td>s27</td><td>教科</td><td>せいかつたんげん</td><td>🗓️</td><td></td><td>せいかつたんげんがくしゅう</td><td></td><td>☑</td><td>かつどう</td><td>小中高</td></tr>
+  <tr><td>s39</td><td>教科</td><td>きゅうしょく</td><td>🍚</td><td>https://drive.google.com/file/d/…/view</td><td></td><td></td><td>☑</td><td>まいにち</td><td></td></tr>
+  <tr><td>f01</td><td>気持ち</td><td>たのしかった</td><td>😄</td><td></td><td></td><td>#FFD43B</td><td>☑</td><td></td><td></td></tr>
+  <tr><td>f04</td><td>気持ち</td><td>むずかしかった</td><td>🤔</td><td></td><td></td><td>#74C0FC</td><td>☑</td><td></td><td></td></tr>
 </table>
 <p>列の意味は <a href="#s7">7.</a> で説明しています。</p>
 
@@ -242,7 +242,8 @@ const DEFAULT_API_URL = 'https://script.google.com/macros/s/XXXXXXXX/exec';</pre
   <tr><td>yomi</td><td>読み上げの読み方（空なら name を読む）。漢字の読みまちがい対策に</td><td>じりつかつどう</td></tr>
   <tr><td>color</td><td>ボタンのわくの色（空なら自動）</td><td>#FFD43B</td></tr>
   <tr><td>show</td><td>チェックを外すと、そのボタンをかくします</td><td>☑ ／ ☐</td></tr>
-  <tr><td>group</td><td>1ページ目のタブの名前。2種類以上あるとタブで切りかえられます（空ならタブなし）</td><td>まいにち ／ ぎょうじ</td></tr>
+  <tr><td>group</td><td>1ページ目のタブの名前。2種類以上あるとタブで切りかえられます（空ならタブなし）</td><td>きょうか ／ かつどう ／ まいにち ／ ぎょうじ</td></tr>
+  <tr><td>level</td><td>表示する学部（小・中・高の組み合わせ）。設定画面の「学部」で しぼりこめます（空ならすべての学部）</td><td>小中高 ／ 中高 ／ 小</td></tr>
 </table>
 
 <div class="box tip"><b>💡 よくある使い方</b>
