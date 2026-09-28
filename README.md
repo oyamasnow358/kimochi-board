@@ -22,3 +22,7 @@ Google スプレッドシートと連携すると、ボタンの中身・写真�
 | `images/` | 標準の写真 |
 | `Code.gs` | スプレッドシート連携用（Google Apps Script） |
 | `セットアップ手順.html` | スプレッドシート連携の手順書 |
+
+---
+
+**MieeL** ― 特別支援教育の教材　[www.mieel-support-school.com](https://www.mieel-support-school.com/)

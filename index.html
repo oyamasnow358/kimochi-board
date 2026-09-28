@@ -8,13 +8,14 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="きもちボード">
 <meta name="theme-color" content="#FFF8E7">
-<title>きもちボード</title>
+<title>きもちボード｜MieeL</title>
 <link rel="apple-touch-icon" id="touchIcon" href="">
 <style>
   /* ============================================================
      きもちボード  見た目（CSS）
      ============================================================ */
   :root {
+    --mieel: radial-gradient(circle at 50% 0%,#1B8FE8 0%,#2BB8D6 28%,#3FCB9E 45%,#8FD24A 58%,#F4D027 72%,#F7941E 100%);
     --bg: #FFF8E7;
     --ink: #1F2937;
     --sub: #6B7280;
@@ -374,6 +375,20 @@
   .toast.show { display: block; }
 
   /* 縦向き・小さい画面 */
+
+  /* ---------- MieeL ロゴ ---------- */
+  .mieel-brand { display: flex; align-items: center; gap: 7px; white-space: nowrap; flex: none; }
+  .orb-mini { width: 22px; height: 22px; border-radius: 50%; background: var(--mieel); flex: none; }
+  .mieel-brand strong { font-size: 16px; color: var(--ink); letter-spacing: .02em; }
+  .mieel-brand .url { font-size: 12px; color: var(--sub); font-weight: 600; }
+  .mieel-foot {
+    margin-top: 28px; padding-top: 16px; border-top: 1px solid #E9ECEF;
+    text-align: center; color: var(--sub); font-size: 13px; line-height: 1.8;
+  }
+  .mieel-foot .mieel-brand { justify-content: center; }
+  .mieel-foot a { color: #1C7ED6; font-weight: 700; text-decoration: none; font-size: 14px; }
+  @media (max-width: 699px) { .topbar .mieel-brand .url { display: none; } }
+
   @media (max-width: 699px) {
     .step .txt { display: none; }
     .back-btn, .spacer { width: 110px; }
@@ -385,6 +400,9 @@
 <body>
 
 <header class="topbar">
+  <div class="mieel-brand" aria-label="MieeL">
+    <span class="orb-mini"></span><strong>MieeL</strong><span class="url">mieel-support-school.com</span>
+  </div>
   <div class="steps" aria-label="すすみぐあい">
     <div class="step" data-step="1"><span class="num">1</span><span class="txt">なにを？</span></div>
     <div class="step" data-step="2"><span class="num">2</span><span class="txt">きもちは？</span></div>
@@ -528,6 +546,7 @@
       <button class="btn ok" type="button" data-close>とじる</button>
       <button class="btn warn" type="button" id="btnResetSettings">初期設定にもどす</button>
     </div>
+    <div class="mieel-foot"><div class="mieel-brand"><span class="orb-mini"></span><strong>MieeL</strong><a href="https://www.mieel-support-school.com/" target="_blank" rel="noopener">www.mieel-support-school.com</a></div>© きもちボード（特別支援教育向け）</div>
   </div>
 </div>
 
