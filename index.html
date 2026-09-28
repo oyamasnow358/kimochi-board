@@ -168,6 +168,16 @@
     display: grid; place-items: center; background: var(--c, #ADB5BD);
   }
 
+  /* グループのタブ（まいにち／ぎょうじ など） */
+  .tabs { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; margin: -4px 0 14px; }
+  .tabs[hidden] { display: none; }
+  .tab {
+    min-width: 180px; height: 68px; padding: 0 28px; border-radius: 999px;
+    border: 4px solid var(--line); background: #fff; color: #6B7280;
+    font-size: clamp(22px, 3vw, 32px); box-shadow: 0 5px 0 #E5DCC3;
+  }
+  .tab.on { background: var(--ink); border-color: var(--ink); color: #fff; box-shadow: 0 5px 0 #000; }
+
   .empty {
     grid-column: 1 / -1; align-self: center; text-align: center;
     color: var(--sub); font-size: 28px; line-height: 1.8;
@@ -273,6 +283,31 @@
   .panel-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
   .panel code { background: #F1F3F5; padding: 1px 6px; border-radius: 6px; }
 
+  /* ボタンをふやす */
+  .editor { background: #F8F9FA; border-radius: 16px; padding: 14px 16px; display: grid; gap: 12px; }
+  .editor .f { display: grid; gap: 4px; }
+  .editor .f > span { font-size: 15px; color: var(--sub); }
+  .editor .f[hidden] { display: none; }
+  .photo-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .photo-prev {
+    width: 96px; height: 96px; border-radius: 14px; border: 2px dashed #CED4DA;
+    background: #fff center / cover no-repeat; display: grid; place-items: center;
+    color: #ADB5BD; font-size: 14px;
+  }
+  .item-list { display: grid; gap: 8px; margin-top: 12px; }
+  .item-row {
+    display: flex; align-items: center; gap: 12px; padding: 8px 10px;
+    background: #fff; border: 1px solid #E9ECEF; border-radius: 12px;
+  }
+  .item-row .pic { width: 56px; height: 56px; flex: none; }
+  .item-row .pic .emoji { font-size: 38px; }
+  .item-row .pic .letter { font-size: 24px; }
+  .item-row .nm { flex: 1; font-weight: 700; }
+  .item-row .tag { display: block; font-size: 13px; color: var(--sub); font-weight: 400; }
+  .hide-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 2px 16px; }
+  .hide-list h4 { grid-column: 1 / -1; margin: 10px 0 2px; font-size: 16px; }
+  .hide-list label { display: flex; align-items: center; gap: 10px; min-height: 44px; }
+
   .toast {
     position: fixed; left: 50%; bottom: 28px; transform: translateX(-50%);
     background: rgba(17,24,39,.9); color: #fff; padding: 14px 22px; border-radius: 14px;
@@ -305,9 +340,10 @@
   <section class="screen" id="screen1">
     <div class="title-row">
       <span class="spacer"></span>
-      <h1 class="title">なにを がんばった？</h1>
+      <h1 class="title">なにを した？</h1>
       <span class="spacer"></span>
     </div>
+    <div class="tabs" id="groupTabs" hidden></div>
     <div class="grid" id="gridSubjects"></div>
   </section>
 
@@ -379,6 +415,37 @@
     <label for="template" class="note" style="display:block;margin-top:12px">結果の文のかたち（<code>{教科}</code> と <code>{気持ち}</code> が選んだ言葉に入れかわります。改行もそのまま表示されます）</label>
     <textarea id="template" data-key="template"></textarea>
 
+    <h3>ボタンをふやす（写真つき）</h3>
+    <p class="note">ふやしたボタンは この端末に保存されます。iPad では「ホーム画面に追加」したアプリで使うと消えにくくなります。別の端末へは下の「バックアップ」で移せます。</p>
+    <div class="editor">
+      <label class="f"><span>種類</span>
+        <select id="newCat"><option value="subject">教科・活動・行事</option><option value="feeling">気持ち</option></select></label>
+      <label class="f" id="newGroupWrap"><span>どのタブに入れる？</span><select id="newGroup"></select></label>
+      <label class="f"><span>ことば（ボタンに出る文字）</span><input type="text" id="newName" maxlength="24" placeholder="例：いもほり"></label>
+      <label class="f"><span>よみかた（読み上げ用・なくてもOK）</span><input type="text" id="newYomi" maxlength="40" placeholder="例：いもほり"></label>
+      <label class="f"><span>絵文字（写真がないとき用・なくてもOK）</span><input type="text" id="newEmoji" maxlength="8" placeholder="例：🍠"></label>
+      <div class="f"><span>写真（なくてもOK。カメラで撮ることもできます）</span>
+        <div class="photo-row">
+          <div class="photo-prev" id="newPhotoPrev">なし</div>
+          <label class="btn">📷 写真をえらぶ<input type="file" id="newPhoto" accept="image/*" hidden></label>
+          <button type="button" class="btn" id="newPhotoClear">はずす</button>
+        </div>
+      </div>
+      <div class="btns" style="margin-top:0"><button type="button" class="btn ok" id="btnAddItem">＋ ボタンをふやす</button></div>
+    </div>
+    <div class="item-list" id="customList"></div>
+
+    <h3>ボタンをかくす</h3>
+    <p class="note">チェックを外したボタンは、この端末で表示されなくなります（使わない行事など）。</p>
+    <div class="hide-list" id="hideList"></div>
+
+    <h3>バックアップ</h3>
+    <p class="note">ふやしたボタン・かくした設定をファイルに保存して、別の iPad に移せます（読みこむと今のものに追加されます）。</p>
+    <div class="btns">
+      <button type="button" class="btn" id="btnExport">⬇ ファイルに書き出す</button>
+      <label class="btn">⬆ ファイルを読みこむ<input type="file" id="importFile" accept=".json,application/json" hidden></label>
+    </div>
+
     <h3>記録</h3>
     <label class="row"><span>えらんだ結果をスプレッドシートの「log」シートに記録する</span><input type="checkbox" data-key="log"></label>
     <p class="note">※ 名前などの個人情報は記録しません（日時・教科・気持ちのみ）。</p>
@@ -416,7 +483,7 @@
     pitch: 1.1,
     columns: 'auto',
     calm: false,
-    template: '{教科}を\nがんばった！\n{気持ち}！',
+    template: '{教科}は\n{気持ち}',
     log: false
   };
 
@@ -464,6 +531,27 @@
 
   let settings = Object.assign({}, DEFAULT_SETTINGS, load(LS_SETTINGS) || {});
   if (!settings.apiUrl && DEFAULT_API_URL) settings.apiUrl = DEFAULT_API_URL;
+  // 以前の文のかたち（「がんばった」が勝手に入る）は新しい形におきかえる
+  if (settings.template === '{教科}を\nがんばった！\n{気持ち}！') {
+    settings.template = DEFAULT_SETTINGS.template;
+    save(LS_SETTINGS, settings);
+  }
+
+  // 先生が この端末で ふやしたボタン・かくしたボタン
+  const LS_CUSTOM = 'kimochiBoard.custom.v1';
+  function normalizeCustom(c) {
+    c = c || {};
+    return {
+      items: Array.isArray(c.items) ? c.items.filter(function (x) {
+        return x && x.name && (x.cat === 'subject' || x.cat === 'feeling');
+      }) : [],
+      hidden: Array.isArray(c.hidden) ? c.hidden.map(String) : []
+    };
+  }
+  let custom = normalizeCustom(load(LS_CUSTOM));
+  function saveCustom() {
+    try { localStorage.setItem(LS_CUSTOM, JSON.stringify(custom)); return true; } catch (e) { return false; }
+  }
 
   const state = {
     data: null,
@@ -471,6 +559,7 @@
     fetchedAt: null,
     lastError: '',
     step: 1,
+    group: '',
     subject: null,
     feeling: null
   };
@@ -488,6 +577,7 @@
         emoji: String(it.emoji || '').trim(),
         imageUrl: String(it.imageUrl || it.image || '').trim(),
         yomi: String(it.yomi || '').trim(),
+        group: String(it.group || '').trim(),
         color: /^#[0-9a-f]{3,8}$/i.test(String(it.color || '').trim()) ? String(it.color).trim() : ''
       };
     }).filter(function (it) { return it.name; })
@@ -690,10 +780,53 @@
     });
   }
 
+  function itemKey(cat, it) { return cat + ':' + it.name; }
+
+  // もとのデータ（かくしたものを除く）＋ この端末でふやしたボタン
+  function visibleList(cat) {
+    const src = cat === 'subject' ? state.data.subjects : state.data.feelings;
+    const base = src.filter(function (it) { return custom.hidden.indexOf(itemKey(cat, it)) === -1; });
+    const extra = normalizeItems(custom.items.filter(function (x) { return x.cat === cat; }));
+    return base.concat(extra);
+  }
+
+  function groupOf(it) { return it.group || 'そのほか'; }
+  function groupsOf(list) {
+    const gs = [];
+    list.forEach(function (it) { const g = groupOf(it); if (gs.indexOf(g) === -1) gs.push(g); });
+    return gs;
+  }
+
   function renderLists() {
-    renderGrid($('#gridSubjects'), state.data.subjects, pickSubject,
+    const subs = visibleList('subject');
+    const groups = groupsOf(subs);
+    const tabs = $('#groupTabs');
+    tabs.innerHTML = '';
+    let shown = subs;
+    if (groups.length > 1) {
+      if (groups.indexOf(state.group) === -1) state.group = groups[0];
+      tabs.hidden = false;
+      groups.forEach(function (g) {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'tab' + (g === state.group ? ' on' : '');
+        b.textContent = g;
+        b.addEventListener('click', function () {
+          if (Date.now() < lockUntil || state.group === g) return;
+          state.group = g;
+          if (settings.speakOnSelect) speak(g);
+          renderLists();
+        });
+        tabs.appendChild(b);
+      });
+      shown = subs.filter(function (it) { return groupOf(it) === state.group; });
+    } else {
+      tabs.hidden = true;
+      state.group = '';
+    }
+    renderGrid($('#gridSubjects'), shown, pickSubject,
       'ボタンがありません。\n先生：スプレッドシートに「教科」の行を追加してください。');
-    renderGrid($('#gridFeelings'), state.data.feelings, pickFeeling,
+    renderGrid($('#gridFeelings'), visibleList('feeling'), pickFeeling,
       'ボタンがありません。\n先生：スプレッドシートに「気持ち」の行を追加してください。');
   }
 
@@ -816,6 +949,8 @@
     stopSpeak();
     state.subject = null;
     state.feeling = null;
+    state.group = '';
+    renderLists();
     go(1);
   }
 
@@ -974,11 +1109,185 @@
     setStatus(text, !!state.lastError);
   }
 
+  /* ---------- ボタンをふやす・かくす・バックアップ ---------- */
+  let newPhotoData = '';
+
+  // 写真を小さくして保存用の文字列にする（容量節約）
+  function fileToDataUrl(file, max) {
+    return new Promise(function (resolve, reject) {
+      const url = URL.createObjectURL(file);
+      const img = new Image();
+      img.onload = function () {
+        const sc = Math.min(1, max / Math.max(img.width, img.height));
+        const c = document.createElement('canvas');
+        c.width = Math.max(1, Math.round(img.width * sc));
+        c.height = Math.max(1, Math.round(img.height * sc));
+        const g = c.getContext('2d');
+        g.fillStyle = '#fff';
+        g.fillRect(0, 0, c.width, c.height);
+        g.drawImage(img, 0, 0, c.width, c.height);
+        URL.revokeObjectURL(url);
+        resolve(c.toDataURL('image/jpeg', 0.8));
+      };
+      img.onerror = function () { URL.revokeObjectURL(url); reject(new Error('写真を読みこめませんでした')); };
+      img.src = url;
+    });
+  }
+
+  function setPhotoPreview(d) {
+    newPhotoData = d || '';
+    const pv = $('#newPhotoPrev');
+    pv.style.backgroundImage = d ? 'url("' + d + '")' : '';
+    pv.textContent = d ? '' : 'なし';
+  }
+
+  function refreshEditor() {
+    const cat = $('#newCat').value;
+    const gs = groupsOf(state.data.subjects.concat(normalizeItems(custom.items.filter(function (x) { return x.cat === 'subject'; }))));
+    const sel = $('#newGroup');
+    const keep = sel.value;
+    sel.innerHTML = '';
+    gs.forEach(function (g) {
+      const o = document.createElement('option');
+      o.value = g === 'そのほか' ? '' : g;
+      o.textContent = g;
+      sel.appendChild(o);
+    });
+    if (keep && gs.indexOf(keep) !== -1) sel.value = keep;
+    else if (gs.indexOf('ぎょうじ') !== -1) sel.value = 'ぎょうじ';
+    $('#newGroupWrap').hidden = cat !== 'subject' || (gs.length === 1 && gs[0] === 'そのほか');
+    renderCustomList();
+    renderHideList();
+  }
+
+  function renderCustomList() {
+    const box = $('#customList');
+    box.innerHTML = '';
+    custom.items.forEach(function (x) {
+      const it = normalizeItems([x])[0];
+      if (!it) return;
+      const row = document.createElement('div');
+      row.className = 'item-row';
+      row.appendChild(makePic(it));
+      const nm = document.createElement('div');
+      nm.className = 'nm';
+      nm.textContent = it.name;
+      const tag = document.createElement('span');
+      tag.className = 'tag';
+      tag.textContent = x.cat === 'feeling' ? '気持ち' : ('教科・行事' + (x.group ? '（' + x.group + '）' : ''));
+      nm.appendChild(tag);
+      row.appendChild(nm);
+      const del = document.createElement('button');
+      del.type = 'button';
+      del.className = 'btn warn';
+      del.textContent = 'けす';
+      del.addEventListener('click', function () {
+        if (!confirm('「' + it.name + '」のボタンを消しますか？')) return;
+        custom.items = custom.items.filter(function (y) { return y !== x; });
+        saveCustom();
+        renderLists();
+        refreshEditor();
+      });
+      row.appendChild(del);
+      box.appendChild(row);
+    });
+  }
+
+  function renderHideList() {
+    const box = $('#hideList');
+    box.innerHTML = '';
+    [['subject', '教科・活動・行事', state.data.subjects], ['feeling', '気持ち', state.data.feelings]].forEach(function (sec) {
+      if (!sec[2].length) return;
+      const h = document.createElement('h4');
+      h.textContent = sec[1];
+      box.appendChild(h);
+      sec[2].forEach(function (it) {
+        const key = itemKey(sec[0], it);
+        const lb = document.createElement('label');
+        const cb = document.createElement('input');
+        cb.type = 'checkbox';
+        cb.checked = custom.hidden.indexOf(key) === -1;
+        cb.addEventListener('change', function () {
+          custom.hidden = custom.hidden.filter(function (k) { return k !== key; });
+          if (!cb.checked) custom.hidden.push(key);
+          saveCustom();
+          renderLists();
+        });
+        lb.appendChild(cb);
+        lb.appendChild(document.createTextNode((it.emoji ? it.emoji + ' ' : '') + it.name));
+        box.appendChild(lb);
+      });
+    });
+  }
+
+  function addCustomItem() {
+    const name = $('#newName').value.trim();
+    if (!name) { toast('「ことば」を入れてください'); $('#newName').focus(); return; }
+    const cat = $('#newCat').value;
+    const item = {
+      id: 'c' + Date.now().toString(36),
+      cat: cat,
+      name: name,
+      yomi: $('#newYomi').value.trim(),
+      emoji: $('#newEmoji').value.trim(),
+      image: newPhotoData,
+      group: cat === 'subject' && !$('#newGroupWrap').hidden ? $('#newGroup').value : ''
+    };
+    custom.items.push(item);
+    if (!saveCustom()) {
+      custom.items.pop();
+      toast('保存できませんでした（容量がいっぱいです。写真つきのボタンを減らしてください）');
+      return;
+    }
+    $('#newName').value = '';
+    $('#newYomi').value = '';
+    $('#newEmoji').value = '';
+    $('#newPhoto').value = '';
+    setPhotoPreview('');
+    if (cat === 'subject' && item.group) state.group = item.group;
+    renderLists();
+    refreshEditor();
+    toast('「' + name + '」をふやしました');
+  }
+
+  function exportCustom() {
+    const blob = new Blob([JSON.stringify({ app: 'kimochi-board', version: 1, custom: custom })], { type: 'application/json' });
+    const d = new Date();
+    const p = function (n) { return ('0' + n).slice(-2); };
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'kimochi-board-' + d.getFullYear() + p(d.getMonth() + 1) + p(d.getDate()) + '.json';
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+  }
+
+  function importCustom(file) {
+    const r = new FileReader();
+    r.onload = function () {
+      try {
+        const obj = JSON.parse(String(r.result));
+        const inc = normalizeCustom(obj.custom || obj);
+        const ids = custom.items.map(function (x) { return x.id; });
+        inc.items.forEach(function (x) { if (ids.indexOf(x.id) === -1) custom.items.push(x); });
+        inc.hidden.forEach(function (k) { if (custom.hidden.indexOf(k) === -1) custom.hidden.push(k); });
+        if (!saveCustom()) { toast('保存できませんでした（容量がいっぱいです）'); return; }
+        renderLists();
+        refreshEditor();
+        toast(inc.items.length + ' 件のボタンを読みこみました');
+      } catch (e) {
+        toast('このファイルは読みこめませんでした');
+      }
+    };
+    r.readAsText(file);
+  }
+
   function openSettings() {
     stopSpeak();
     fillForm();
     loadVoices();
     updateStatus();
+    refreshEditor();
     $('#settingsModal').classList.add('open');
   }
   function closeSettings() {
@@ -1051,8 +1360,22 @@
     $$('[data-close]').forEach(function (b) { b.addEventListener('click', closeSettings); });
     $('#settingsModal').addEventListener('click', function (e) { if (e.target.id === 'settingsModal') closeSettings(); });
     $('#btnReload').addEventListener('click', function () { loadRemote(true); });
+    $('#newCat').addEventListener('change', refreshEditor);
+    $('#btnAddItem').addEventListener('click', addCustomItem);
+    $('#newPhotoClear').addEventListener('click', function () { $('#newPhoto').value = ''; setPhotoPreview(''); });
+    $('#newPhoto').addEventListener('change', function (e) {
+      const f = e.target.files && e.target.files[0];
+      if (!f) return;
+      fileToDataUrl(f, 480).then(setPhotoPreview).catch(function (err) { toast(err.message); });
+    });
+    $('#btnExport').addEventListener('click', exportCustom);
+    $('#importFile').addEventListener('change', function (e) {
+      const f = e.target.files && e.target.files[0];
+      if (f) importCustom(f);
+      e.target.value = '';
+    });
     $('#btnTestVoice').addEventListener('click', function () {
-      speak('こくごを がんばった！ たのしかった！');
+      speak('こくごは たのしかった');
     });
     $('#btnResetSettings').addEventListener('click', function () {
       if (!confirm('せっていを はじめの状態に もどしますか？（GAS の URL も消えます）')) return;

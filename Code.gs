@@ -29,7 +29,8 @@ const HEADER_ALIASES = {
   imageUrl: ['imageurl', 'image', 'imageuri', '画像', '画像url', '写真', '写真url', 'がぞう'],
   yomi:     ['yomi', 'よみ', '読み', 'よみかた', '読み方'],
   color:    ['color', '色', 'いろ'],
-  show:     ['show', 'visible', '表示', 'ひょうじ']
+  show:     ['show', 'visible', '表示', 'ひょうじ'],
+  group:    ['group', 'グループ', 'タブ', 'ぐるーぷ']
 };
 
 /* ------------------------------------------------------------
@@ -106,7 +107,8 @@ function getData() {
         emoji: str_(row.emoji),
         imageUrl: toDirectImageUrl_(str_(row.imageUrl)),
         yomi: str_(row.yomi),
-        color: str_(row.color)
+        color: str_(row.color),
+        group: str_(row.group)
       };
 
       const type = categoryType_(row.category);
@@ -163,26 +165,35 @@ function setupSampleSheet() {
   }
   if (!sheet) sheet = ss.insertSheet(SHEET_NAME, 0);
 
-  const header = ['id', 'category', 'name', 'emoji', 'imageUrl', 'yomi', 'color', 'show'];
+  const header = ['id', 'category', 'name', 'emoji', 'imageUrl', 'yomi', 'color', 'show', 'group'];
   const rows = [
-    ['s01', '教科', 'こくご',     '📖', '', '', '', true],
-    ['s02', '教科', 'さんすう',   '🔢', '', '', '', true],
-    ['s03', '教科', 'せいかつ',   '🌱', '', '', '', true],
-    ['s04', '教科', 'おんがく',   '🎵', '', '', '', true],
-    ['s05', '教科', 'ずこう',     '🎨', '', '', '', true],
-    ['s06', '教科', 'たいいく',   '🏃', '', '', '', true],
-    ['s07', '教科', 'じりつ',     '🧩', '', 'じりつかつどう', '', true],
-    ['s08', '教科', 'きゅうしょく', '🍚', '', '', '', true],
-    ['s09', '教科', 'そうじ',     '🧹', '', '', '', true],
-    ['s10', '教科', 'あそび',     '⚽', '', '', '', true],
-    ['f01', '気持ち', 'たのしかった',   '😄', '', '', '#FFD43B', true],
-    ['f02', '気持ち', 'できた',         '👍', '', '', '#69DB7C', true],
-    ['f03', '気持ち', 'うれしかった',   '😊', '', '', '#FFA8C5', true],
-    ['f04', '気持ち', 'むずかしかった', '🤔', '', '', '#74C0FC', true],
-    ['f05', '気持ち', 'つかれた',       '😪', '', '', '#B197FC', true],
-    ['f06', '気持ち', 'どきどきした',   '😳', '', '', '#FFA94D', true],
-    ['f07', '気持ち', 'かなしかった',   '😢', '', '', '#91A7FF', true],
-    ['f08', '気持ち', 'いやだった',     '😣', '', '', '#ADB5BD', true]
+    ['s01', '教科', 'こくご', '📖', '', '', '', true, 'まいにち'],
+    ['s02', '教科', 'さんすう', '🔢', '', '', '', true, 'まいにち'],
+    ['s03', '教科', 'せいかつ', '🌱', '', '', '', true, 'まいにち'],
+    ['s04', '教科', 'おんがく', '🎵', '', '', '', true, 'まいにち'],
+    ['s05', '教科', 'ずこう', '🎨', '', '', '', true, 'まいにち'],
+    ['s06', '教科', 'たいいく', '🏃', '', '', '', true, 'まいにち'],
+    ['s07', '教科', 'じりつ', '🧩', '', 'じりつかつどう', '', true, 'まいにち'],
+    ['s08', '教科', 'きゅうしょく', '🍚', '', '', '', true, 'まいにち'],
+    ['s09', '教科', 'そうじ', '🧹', '', '', '', true, 'まいにち'],
+    ['s10', '教科', 'あそび', '⚽', '', '', '', true, 'まいにち'],
+    ['e01', '行事', 'しゃかいたいけんがくしゅう', '🚃', '', '', '', true, 'ぎょうじ'],
+    ['e02', '行事', 'しゅくはくがくしゅう', '🏨', '', '', '', true, 'ぎょうじ'],
+    ['e03', '行事', 'しゅうがくりょこう', '🚄', '', '', '', true, 'ぎょうじ'],
+    ['e04', '行事', 'えんそく', '🎒', '', '', '', true, 'ぎょうじ'],
+    ['e05', '行事', 'うんどうかい', '🏅', '', '', '', true, 'ぎょうじ'],
+    ['e06', '行事', 'ぶんかさい', '🎭', '', '', '', true, 'ぎょうじ'],
+    ['e07', '行事', 'はっぴょうかい', '🎤', '', '', '', true, 'ぎょうじ'],
+    ['e08', '行事', 'こうりゅうかい', '🤝', '', '', '', true, 'ぎょうじ'],
+    ['e09', '行事', 'はんぷかい', '🛍️', '', '', '', true, 'ぎょうじ'],
+    ['f01', '気持ち', 'たのしかった',   '😄', '', '', '#FFD43B', true, ''],
+    ['f02', '気持ち', 'できた',         '👍', '', '', '#69DB7C', true, ''],
+    ['f03', '気持ち', 'うれしかった',   '😊', '', '', '#FFA8C5', true, ''],
+    ['f04', '気持ち', 'むずかしかった', '🤔', '', '', '#74C0FC', true, ''],
+    ['f05', '気持ち', 'つかれた',       '😪', '', '', '#B197FC', true, ''],
+    ['f06', '気持ち', 'どきどきした',   '😳', '', '', '#FFA94D', true, ''],
+    ['f07', '気持ち', 'かなしかった',   '😢', '', '', '#91A7FF', true, ''],
+    ['f08', '気持ち', 'いやだった',     '😣', '', '', '#ADB5BD', true, '']
   ];
 
   sheet.clear();
@@ -193,7 +204,7 @@ function setupSampleSheet() {
 
   // category 列はプルダウンで選べるようにする
   const catRule = SpreadsheetApp.newDataValidation()
-    .requireValueInList(['教科', '気持ち'], true).setAllowInvalid(true).build();
+    .requireValueInList(['教科', '行事', '気持ち'], true).setAllowInvalid(true).build();
   sheet.getRange(2, 2, 200, 1).setDataValidation(catRule);
 
   // show 列はチェックボックス
@@ -207,6 +218,7 @@ function setupSampleSheet() {
   sheet.setColumnWidth(6, 150);
   sheet.setColumnWidth(7, 90);
   sheet.setColumnWidth(8, 60);
+  sheet.setColumnWidth(9, 100);
 
   notify_('サンプルの「' + SHEET_NAME + '」シートを作りました！');
 }
@@ -275,7 +287,7 @@ function isHidden_(v) {
 function categoryType_(v) {
   const s = str_(v).toLowerCase();
   if (/気持|きもち|感想|かんそう|feel/.test(s)) return 'feeling';
-  if (/教科|きょうか|活動|かつどう|subject|activity/.test(s)) return 'subject';
+  if (/教科|きょうか|活動|かつどう|行事|ぎょうじ|subject|activity|event/.test(s)) return 'subject';
   return '';
 }
 

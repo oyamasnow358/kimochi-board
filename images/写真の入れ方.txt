@@ -3,6 +3,8 @@
 ■ ファイル名（data.js に書いてある名前と同じにする）
   教科  : kokugo.jpg  sansu.jpg  seikatsu.jpg  ongaku.jpg  zukou.jpg
           taiiku.jpg  jiritsu.jpg  kyushoku.jpg  souji.jpg  asobi.jpg
+  行事  : shakaitaiken.jpg  shukuhaku.jpg  shugakuryoko.jpg  ensoku.jpg
+          undokai.jpg  bunkasai.jpg  happyokai.jpg  koryukai.jpg  hanpukai.jpg
   気持ち: tanoshikatta.jpg  dekita.jpg  ureshikatta.jpg  muzukashikatta.jpg
           tsukareta.jpg  dokidoki.jpg  kanashikatta.jpg  iyadatta.jpg
 

@@ -108,12 +108,12 @@
 自分で作る場合は、シート名を <code>master</code> にして、1行目に次の見出しを入れてください。</p>
 
 <table>
-  <tr><th>A: id</th><th>B: category</th><th>C: name</th><th>D: emoji</th><th>E: imageUrl</th><th>F: yomi</th><th>G: color</th><th>H: show</th></tr>
-  <tr><td>s01</td><td>教科</td><td>こくご</td><td>📖</td><td></td><td></td><td></td><td>☑</td></tr>
-  <tr><td>s07</td><td>教科</td><td>じりつ</td><td>🧩</td><td></td><td>じりつかつどう</td><td></td><td>☑</td></tr>
-  <tr><td>s08</td><td>教科</td><td>きゅうしょく</td><td>🍚</td><td>https://drive.google.com/file/d/…/view</td><td></td><td></td><td>☑</td></tr>
-  <tr><td>f01</td><td>気持ち</td><td>たのしかった</td><td>😄</td><td></td><td></td><td>#FFD43B</td><td>☑</td></tr>
-  <tr><td>f04</td><td>気持ち</td><td>むずかしかった</td><td>🤔</td><td></td><td></td><td>#74C0FC</td><td>☑</td></tr>
+  <tr><th>A: id</th><th>B: category</th><th>C: name</th><th>D: emoji</th><th>E: imageUrl</th><th>F: yomi</th><th>G: color</th><th>H: show</th><th>I: group</th></tr>
+  <tr><td>s01</td><td>教科</td><td>こくご</td><td>📖</td><td></td><td></td><td></td><td>☑</td><td>まいにち</td></tr>
+  <tr><td>s07</td><td>教科</td><td>じりつ</td><td>🧩</td><td></td><td>じりつかつどう</td><td></td><td>☑</td><td>まいにち</td></tr>
+  <tr><td>s08</td><td>教科</td><td>きゅうしょく</td><td>🍚</td><td>https://drive.google.com/file/d/…/view</td><td></td><td></td><td>☑</td><td>まいにち</td></tr>
+  <tr><td>f01</td><td>気持ち</td><td>たのしかった</td><td>😄</td><td></td><td></td><td>#FFD43B</td><td>☑</td><td></td></tr>
+  <tr><td>f04</td><td>気持ち</td><td>むずかしかった</td><td>🤔</td><td></td><td></td><td>#74C0FC</td><td>☑</td><td></td></tr>
 </table>
 <p>列の意味は <a href="#s7">7.</a> で説明しています。</p>
 
@@ -235,20 +235,22 @@ const DEFAULT_API_URL = 'https://script.google.com/macros/s/XXXXXXXX/exec';</pre
 <table>
   <tr><th>列</th><th>意味</th><th>書き方の例</th></tr>
   <tr><td>id</td><td>番号（重ならなければ何でもOK。空でも動きます）</td><td>s01, f01</td></tr>
-  <tr><td>category</td><td><b>教科</b> か <b>気持ち</b>（プルダウンで選べます）</td><td>教科 ／ 気持ち</td></tr>
+  <tr><td>category</td><td><b>教科</b>・<b>行事</b>・<b>気持ち</b>（プルダウンで選べます。教科と行事は1ページ目に出ます）</td><td>教科 ／ 行事 ／ 気持ち</td></tr>
   <tr><td>name</td><td>ボタンと結果に表示される言葉</td><td>こくご ／ たのしかった</td></tr>
   <tr><td>emoji</td><td>絵文字（画像がないとき・読みこめないときに表示）<br>Windows では <span class="k">Win</span>+<span class="k">.</span> で絵文字を入力できます</td><td>📖 ／ 😄</td></tr>
   <tr><td>imageUrl</td><td>写真・イラストのURL（空なら絵文字）</td><td>Googleドライブの共有リンク</td></tr>
   <tr><td>yomi</td><td>読み上げの読み方（空なら name を読む）。漢字の読みまちがい対策に</td><td>じりつかつどう</td></tr>
   <tr><td>color</td><td>ボタンのわくの色（空なら自動）</td><td>#FFD43B</td></tr>
   <tr><td>show</td><td>チェックを外すと、そのボタンをかくします</td><td>☑ ／ ☐</td></tr>
+  <tr><td>group</td><td>1ページ目のタブの名前。2種類以上あるとタブで切りかえられます（空ならタブなし）</td><td>まいにち ／ ぎょうじ</td></tr>
 </table>
 
 <div class="box tip"><b>💡 よくある使い方</b>
 <ul>
   <li>「きゅうしょく」「そうじ」「あさのかい」など<b>活動</b>も category は「教科」でOKです。</li>
   <li>選択肢が多いと迷う児童には、show のチェックを外して <b>数を減らす</b>と選びやすくなります。</li>
-  <li>結果の文は設定画面で変えられます（例：「{教科}の じかん、{気持ち}！」）。</li>
+  <li>結果の文は設定画面で変えられます（はじめは「{教科}は {気持ち}」。例：「{教科}の じかん、{気持ち}」）。</li>
+  <li>スプレッドシートを使わなくても、設定画面の「ボタンをふやす」で、その iPad だけに写真つきのボタンを追加できます。</li>
 </ul>
 </div>
 
