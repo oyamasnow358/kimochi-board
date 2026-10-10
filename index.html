@@ -400,6 +400,25 @@
     .back-btn { font-size: 22px; height: 64px; }
     .grid { grid-auto-rows: minmax(150px, 1fr); }
   }
+  /* ---- いま つたえる・スキャン・場面 ---- */
+  body.mode-req .steps { visibility: hidden; }
+  .scene-chip { flex: none; height: 40px; padding: 0 14px; border-radius: 999px; border: 2px solid rgba(0,0,0,.1); background: rgba(255,255,255,.85); font: inherit; font-size: 15px; color: #495057; display: inline-flex; align-items: center; gap: 4px; }
+  .card.scan { outline: 10px solid #FAB005; outline-offset: 2px; transform: scale(1.04); z-index: 2; }
+  body.scan-mode .card:not(.scan) { opacity: .75; }
+  .req-result { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; }
+  .req-card { background: #fff; border: 10px solid var(--c, #FFD43B); border-radius: 44px; padding: 3vmin 6vmin; display: flex; flex-direction: column; align-items: center; gap: 1vmin; box-shadow: 0 20px 60px rgba(0,0,0,.15); animation: pop .45s ease-out; max-width: 92vw; }
+  .req-card .pic { width: min(42vmin, 360px); height: min(42vmin, 360px); }
+  .req-card .pic .emoji { font-size: min(30vmin, 260px); }
+  .req-card .word { font-size: min(13vmin, 120px); font-weight: 800; line-height: 1.15; text-align: center; }
+  .req-card .phrase { font-size: min(5vmin, 36px); color: #868E96; text-align: center; }
+  .vrow { display: flex; align-items: center; gap: 8px; padding: 6px 0; border-bottom: 1px solid #EEF2F7; }
+  .vrow .nm { flex: 1; font-size: 16px; }
+  .vrow .pic { width: 44px; height: 44px; flex: none; } .vrow .pic .emoji { font-size: 30px; }
+  .btn.rec.on { background: #FFE3E3; border-color: #E03131; color: #E03131; }
+  table.klog { border-collapse: collapse; width: 100%; font-size: 14px; margin: 6px 0 10px; }
+  table.klog td, table.klog th { border-bottom: 1px solid #EEF2F7; padding: 5px 6px; text-align: left; }
+  table.klog th { color: #868E96; font-size: 12.5px; }
+  .bar { display: inline-block; height: 12px; border-radius: 6px; background: #74C0FC; vertical-align: middle; margin-right: 6px; }
 </style>
 </head>
 <body>
@@ -413,6 +432,7 @@
     <div class="step" data-step="2"><span class="num">2</span><span class="txt">きもちは？</span></div>
     <div class="step" data-step="3"><span class="num">3</span><span class="txt">できた！</span></div>
   </div>
+  <button class="scene-chip" id="sceneChip" type="button" aria-label="いまの 場面（タップで かえる）" hidden></button>
   <button class="gear" id="gear" type="button" aria-label="先生用のせってい（ながおし）">⚙️</button>
 </header>
 
@@ -451,6 +471,27 @@
       <button class="big-btn btn-next" id="btnNext" type="button"><span class="ico">▶</span>つぎの ひと</button>
     </div>
   </section>
+
+  <!-- いま つたえる：カードを えらぶ -->
+  <section class="screen" id="screen4">
+    <div class="title-row">
+      <span class="spacer"></span>
+      <h1 class="title">なにを つたえる？</h1>
+      <span class="spacer"></span>
+    </div>
+    <div class="grid" id="gridRequests"></div>
+  </section>
+
+  <!-- いま つたえる：大きく 出す -->
+  <section class="screen" id="screen5">
+    <div class="req-result">
+      <div class="req-card" id="reqCard"></div>
+      <div class="result-actions">
+        <button class="big-btn btn-talk" id="btnTalk5" type="button"><span class="ico">🔊</span>もういちど</button>
+        <button class="big-btn btn-next" id="btnBack5" type="button"><span class="ico">◀</span>もどる</button>
+      </div>
+    </div>
+  </section>
 </main>
 
 <!-- 先生用：設定画面 -->
@@ -461,6 +502,42 @@
       <button class="btn ok" type="button" data-close>とじる</button>
     </div>
     <p class="note">この画面は、右上の ⚙️ を 1.5秒 ながおし すると開きます。変更はすぐに保存されます（この端末のみ）。</p>
+
+    <h3>つかいかた</h3>
+    <label class="row"><span>モード</span>
+      <select data-key="mode">
+        <option value="furikaeri">ふりかえり（なにを した ＋ きもち）</option>
+        <option value="req">いま つたえる（きもち・ようきゅうを 1まいで）</option>
+      </select>
+    </label>
+    <label class="row"><span>「いま つたえる」の カードの 数</span>
+      <select data-key="reqCount">
+        <option value="2">2まい（はじめは ここから）</option>
+        <option value="3">3まい</option>
+        <option value="4">4まい</option>
+        <option value="6">6まい</option>
+        <option value="9">9まい</option>
+        <option value="0">ぜんぶ</option>
+      </select>
+    </label>
+    <p class="note">「いま つたえる」は、下の「🎯 カードを えらぶ」→「③ いま つたえる」で えらんだ じゅんに、ここで きめた 数だけ 出ます（えらんで いなければ 上から）。</p>
+    <label class="row"><span>えらびかた</span>
+      <select data-key="input">
+        <option value="touch">👆 タッチ</option>
+        <option value="scan">✨ スキャン（カードが じゅんに 光る → どこかを おす・スイッチ）</option>
+      </select>
+    </label>
+    <label class="row"><span>スキャンの はやさ</span>
+      <select data-key="scanMs">
+        <option value="1000">はやい（1びょう）</option>
+        <option value="1500">ふつう（1.5びょう）</option>
+        <option value="2500">ゆっくり（2.5びょう）</option>
+        <option value="4000">とても ゆっくり（4びょう）</option>
+      </select>
+    </label>
+    <p class="note">スキャン：画面の どこを おしても、光っている カードを えらびます。Bluetooth の スイッチ（スペース・エンターキー）でも えらべます。</p>
+    <label for="scenesText" class="note" style="display:block;margin-top:10px">場面（1行に 1つ。画面の 左上の 札を タップすると じゅんに かわり、きろくに のこります。からっぽなら 札を 出しません）</label>
+    <textarea id="scenesText" data-key="scenesText" style="min-height:90px"></textarea>
 
     <h3>えらばせるカード（しぼりこみ）</h3>
     <p class="note">選択肢が多いと むずかしい子には、先生がカードを 2〜3まい などに しぼって 大きく出せます。えらんでいないときは ぜんぶの中から えらびます。</p>
@@ -516,7 +593,7 @@
     <p class="note">ふやしたボタンは この端末に保存されます。iPad では「ホーム画面に追加」したアプリで使うと消えにくくなります。別の端末へは下の「バックアップ」で移せます。</p>
     <div class="editor">
       <label class="f"><span>種類</span>
-        <select id="newCat"><option value="subject">教科・活動・行事</option><option value="feeling">気持ち</option></select></label>
+        <select id="newCat"><option value="subject">教科・活動・行事</option><option value="feeling">気持ち</option><option value="request">いま つたえる（ようきゅう）</option></select></label>
       <label class="f" id="newGroupWrap"><span>どのタブに入れる？</span><select id="newGroup"></select></label>
       <label class="f"><span>ことば（ボタンに出る文字）</span><input type="text" id="newName" maxlength="24" placeholder="例：いもほり"></label>
       <label class="f"><span>よみかた（読み上げ用・なくてもOK）</span><input type="text" id="newYomi" maxlength="40" placeholder="例：いもほり"></label>
@@ -531,6 +608,23 @@
       <div class="btns" style="margin-top:0"><button type="button" class="btn ok" id="btnAddItem">＋ ボタンをふやす</button></div>
     </div>
     <div class="item-list" id="customList"></div>
+
+    <h3>🎤 先生の こえを 録音する</h3>
+    <p class="note">録音した カードは、読み上げの かわりに 先生の こえが ながれます（その子に なじみの ある こえで）。録音は この端末に 保存されます（15びょう まで）。</p>
+    <div class="seg" id="voiceCatSeg">
+      <button type="button" data-vcat="request">いま つたえる</button>
+      <button type="button" data-vcat="feeling">きもち</button>
+      <button type="button" data-vcat="subject">なにを した</button>
+    </div>
+    <div id="voiceList"></div>
+
+    <h3>📊 この 端末の きろく</h3>
+    <label class="row"><span>えらんだ カード・場面・えらぶまでの 時間を この 端末に きろく する</span><input type="checkbox" data-key="localLog"></label>
+    <div id="logView"></div>
+    <div class="btns">
+      <button type="button" class="btn" id="btnLogCsv">📄 CSV で かきだす</button>
+      <button type="button" class="btn warn" id="btnLogClear">きろくを けす</button>
+    </div>
 
     <h3>ボタンをかくす</h3>
     <p class="note">チェックを外したボタンは、この端末で表示されなくなります（使わない行事など）。</p>
@@ -566,6 +660,7 @@
     <div class="seg">
       <button type="button" data-pickcat="subject">① なにを した？（教科・行事）</button>
       <button type="button" data-pickcat="feeling">② きもち</button>
+      <button type="button" data-pickcat="request">③ いま つたえる</button>
     </div>
     <div class="tray-head">
       <b>えらんだカード：<span id="pickCount"></span></b>
@@ -613,8 +708,38 @@ function jaSay(t) {
     level: '',
     pick: { subject: [], feeling: [] },   // 先生がえらんだカード（空なら ぜんぶ）
     template: '{教科}は\n{気持ち}',
-    log: false
+    log: false,
+    mode: 'furikaeri',          // furikaeri（ふりかえり）／ req（いま つたえる）
+    reqCount: '2',
+    input: 'touch',             // touch ／ scan
+    scanMs: '1500',
+    scenesText: 'あさの かい\nじゅぎょう\nきゅうしょく\nやすみじかん\nかえりの かい',
+    scene: '',
+    localLog: true
   };
+  // いま つたえる（ようきゅう・きもち）の はじめの カード。yomi が よみあげ
+  const DEFAULT_REQUESTS = [
+    { id: 'r01', name: 'いや', emoji: '😣', yomi: 'いやです', color: '#ADB5BD' },
+    { id: 'r02', name: 'てつだって', emoji: '🤝', yomi: 'てつだってください', color: '#74C0FC' },
+    { id: 'r03', name: 'やすみたい', emoji: '🛋️', yomi: 'すこし やすみたいです', color: '#B197FC' },
+    { id: 'r04', name: 'もういっかい', emoji: '🔁', yomi: 'もういっかい やりたい', color: '#69DB7C' },
+    { id: 'r05', name: 'おわり', emoji: '🏁', yomi: 'おわりに したいです', color: '#FFA94D' },
+    { id: 'r06', name: 'まって', emoji: '✋', yomi: 'ちょっと まってください', color: '#FFD43B' },
+    { id: 'r07', name: 'トイレ', emoji: '🚻', yomi: 'トイレに いきたいです', color: '#FF8787' },
+    { id: 'r08', name: 'のみたい', emoji: '🥤', yomi: 'のみものが ほしいです', color: '#63E6BE' },
+    { id: 'r09', name: 'たべたい', emoji: '🍙', yomi: 'たべたいです', color: '#FFC078' },
+    { id: 'r10', name: 'いたい', emoji: '🤕', yomi: 'いたいです', color: '#FF8787' },
+    { id: 'r11', name: 'あそびたい', emoji: '🧸', yomi: 'あそびたいです', color: '#FFA8C5' },
+    { id: 'r12', name: 'ちょうだい', emoji: '🙏', yomi: 'ちょうだい', color: '#91A7FF' },
+    { id: 'r13', name: 'はい', emoji: '⭕', yomi: 'はい', color: '#69DB7C' },
+    { id: 'r14', name: 'いいえ', emoji: '❌', yomi: 'いいえ', color: '#FF8787' },
+    { id: 'r15', name: 'わからない', emoji: '❓', yomi: 'わかりません', color: '#ADB5BD' },
+    { id: 'r16', name: 'こわい', emoji: '😨', yomi: 'こわいです', color: '#91A7FF' },
+    { id: 'r17', name: 'うるさい', emoji: '🙉', yomi: 'うるさくて つらいです', color: '#FFA94D' },
+    { id: 'r18', name: 'あつい', emoji: '🥵', yomi: 'あついです', color: '#FF8787' },
+    { id: 'r19', name: 'さむい', emoji: '🥶', yomi: 'さむいです', color: '#74C0FC' },
+    { id: 'r20', name: 'ひとりに なりたい', emoji: '🧍', yomi: 'ひとりに なりたいです', color: '#B197FC' }
+  ];
 
   // スプレッドシートにつながっていないときに使うサンプル
   const SAMPLE = {
@@ -660,8 +785,8 @@ function jaSay(t) {
 
   let settings = Object.assign({}, DEFAULT_SETTINGS, load(LS_SETTINGS) || {});
   if (!settings.apiUrl && DEFAULT_API_URL) settings.apiUrl = DEFAULT_API_URL;
-  if (!settings.pick || typeof settings.pick !== 'object') settings.pick = { subject: [], feeling: [] };
-  ['subject', 'feeling'].forEach(function (c) {
+  if (!settings.pick || typeof settings.pick !== 'object') settings.pick = { subject: [], feeling: [], request: [] };
+  ['subject', 'feeling', 'request'].forEach(function (c) {
     if (!Array.isArray(settings.pick[c])) settings.pick[c] = [];
   });
   // 以前の文のかたち（「がんばった」が勝手に入る）は新しい形におきかえる
@@ -676,7 +801,7 @@ function jaSay(t) {
     c = c || {};
     return {
       items: Array.isArray(c.items) ? c.items.filter(function (x) {
-        return x && x.name && (x.cat === 'subject' || x.cat === 'feeling');
+        return x && x.name && (x.cat === 'subject' || x.cat === 'feeling' || x.cat === 'request');
       }) : [],
       hidden: Array.isArray(c.hidden) ? c.hidden.map(String) : []
     };
@@ -694,7 +819,9 @@ function jaSay(t) {
     step: 1,
     group: '',
     subject: null,
-    feeling: null
+    feeling: null,
+    request: null,
+    shownAt: Date.now()
   };
 
   /* ============================================================
@@ -720,7 +847,7 @@ function jaSay(t) {
 
   function normalizeData(d) {
     d = d || {};
-    return { subjects: normalizeItems(d.subjects), feelings: normalizeItems(d.feelings) };
+    return { subjects: normalizeItems(d.subjects), feelings: normalizeItems(d.feelings), requests: normalizeItems(Array.isArray(d.requests) && d.requests.length ? d.requests : (window.KIMOCHI_DATA && Array.isArray(window.KIMOCHI_DATA.requests) && window.KIMOCHI_DATA.requests.length ? window.KIMOCHI_DATA.requests : DEFAULT_REQUESTS)) };
   }
 
   // data.js（写真入りの内蔵データ）があればそれを、無ければサンプルを使う
@@ -915,10 +1042,11 @@ function jaSay(t) {
   }
 
   function itemKey(cat, it) { return cat + ':' + it.name; }
+  function srcOf(cat) { return cat === 'subject' ? state.data.subjects : cat === 'feeling' ? state.data.feelings : state.data.requests; }
 
   // もとのデータ（かくしたものを除く）＋ この端末でふやしたボタン
   function visibleList(cat) {
-    const src = cat === 'subject' ? state.data.subjects : state.data.feelings;
+    const src = srcOf(cat);
     const lv = settings.level;
     const base = src.filter(function (it) {
       if (lv && it.level && it.level.indexOf(lv) === -1) return false; // 学部でしぼる
@@ -939,7 +1067,7 @@ function jaSay(t) {
   function pickedItems(cat) {
     const keys = (settings.pick && settings.pick[cat]) || [];
     if (!keys.length) return null;
-    const src = (cat === 'subject' ? state.data.subjects : state.data.feelings)
+    const src = srcOf(cat)
       .concat(normalizeItems(custom.items.filter(function (x) { return x.cat === cat; })));
     const out = [];
     keys.forEach(function (k) {
@@ -973,6 +1101,12 @@ function jaSay(t) {
     renderGrid($('#gridFeelings'), pickedF || visibleList('feeling'), pickFeeling,
       'ボタンがありません。\n先生：スプレッドシートに「気持ち」の行を追加してください。');
     applyFew($('#gridFeelings'), pickedF ? pickedF.length : 0);
+    // いま つたえる：えらんだ じゅん（なければ 上から）に、きめた 数だけ
+    const n = Number(settings.reqCount) || 0;
+    let reqs = pickedItems('request') || visibleList('request');
+    if (n) reqs = reqs.slice(0, n);
+    renderGrid($('#gridRequests'), reqs, pickRequest, 'カードが ありません。');
+    applyFew($('#gridRequests'), reqs.length <= 6 ? reqs.length : 0);
   }
 
   function renderSubjectsAll() {
@@ -1090,7 +1224,15 @@ function jaSay(t) {
       g.scrollTop = 0;
     });
     lockUntil = Date.now() + 600; // 画面が変わった直後のタップは受けつけない
+    state.shownAt = Date.now();
+    clearTimeout(autoBackT);
+    scanStart();
+    // スキャンの とき：結果の 画面は しばらくしたら 自動で もどる
+    if (step === 3 && settings.input === 'scan') autoBackT = setTimeout(function () { resetForNext(); }, 7000);
+    if (step === 5) autoBackT = setTimeout(function () { if (state.step === 5) go(4); }, settings.input === 'scan' ? 5000 : 8000);
   }
+  let autoBackT = null, lastMode = null;
+  function homeStep() { return settings.mode === 'req' ? 4 : 1; }
 
   function transitionDelay() { return settings.calm ? 150 : 380; }
 
@@ -1099,7 +1241,7 @@ function jaSay(t) {
     state.subject = it;
     grid.classList.add('picked');
     btn.classList.add('chosen');
-    if (settings.speakOnSelect) speak(it.yomi || it.name);
+    if (settings.speakOnSelect) sayItem('subject', it);
     setTimeout(function () {
       renderChosenChip();
       go(2);
@@ -1112,9 +1254,10 @@ function jaSay(t) {
     grid.classList.add('picked');
     btn.classList.add('chosen');
     // iPad ではタップの直後に読み上げを始める必要があるので、ここで呼ぶ
-    if (settings.autoSpeak) speak(speechText());
-    else if (settings.speakOnSelect) speak(it.yomi || it.name);
+    if (settings.autoSpeak) saySentence();
+    else if (settings.speakOnSelect) sayItem('feeling', it);
     sendLog();
+    localLog({ mode: 'ふりかえり', s: state.subject && state.subject.name, f: it.name });
     setTimeout(function () {
       renderResult();
       go(3);
@@ -1125,9 +1268,189 @@ function jaSay(t) {
     stopSpeak();
     state.subject = null;
     state.feeling = null;
+    state.request = null;
     state.group = '';
     renderLists();
-    go(1);
+    go(homeStep());
+  }
+
+  // いま つたえる：1まいで 大きく 伝える
+  function pickRequest(it, btn, grid) {
+    if (!tapOk()) return;
+    state.request = it;
+    grid.classList.add('picked');
+    btn.classList.add('chosen');
+    sayItem('request', it);
+    localLog({ mode: 'いま つたえる', r: it.name });
+    setTimeout(function () { renderReqCard(it); go(5); }, transitionDelay());
+  }
+  function renderReqCard(it) {
+    const c = $('#reqCard');
+    c.innerHTML = '';
+    c.style.setProperty('--c', it.color);
+    c.appendChild(makePic(it));
+    const w = document.createElement('div'); w.className = 'word'; w.textContent = it.name; c.appendChild(w);
+    if (it.yomi && it.yomi !== it.name) { const ph = document.createElement('div'); ph.className = 'phrase'; ph.textContent = it.yomi; c.appendChild(ph); }
+    c.style.animation = 'none'; void c.offsetWidth; c.style.animation = '';
+  }
+
+  /* ============================================================
+     先生の こえ（録音）。この 端末の IndexedDB に 保存し、ひらいた ときに よみこんで おく（iPad は タップの すぐあとに 再生する ひつようが ある）
+     ============================================================ */
+  const VOICE_URL = {};
+  const VDB = {
+    db: null,
+    open: function () { const self = this; if (self.db) return Promise.resolve(self.db); return new Promise(function (res, rej) { if (!window.indexedDB) { rej(new Error('noidb')); return; } const r = indexedDB.open('kimochiBoard', 1); r.onupgradeneeded = function () { r.result.createObjectStore('voices', { keyPath: 'k' }); }; r.onsuccess = function () { self.db = r.result; res(self.db); }; r.onerror = function () { rej(r.error); }; }); },
+    all: function () { return this.open().then(function (d) { return new Promise(function (res) { const q = d.transaction('voices').objectStore('voices').getAll(); q.onsuccess = function () { res(q.result || []); }; q.onerror = function () { res([]); }; }); }); },
+    put: function (k, blob) { return this.open().then(function (d) { return new Promise(function (res, rej) { const tx = d.transaction('voices', 'readwrite'); tx.objectStore('voices').put({ k: k, blob: blob }); tx.oncomplete = res; tx.onerror = function () { rej(tx.error); }; }); }); },
+    del: function (k) { return this.open().then(function (d) { return new Promise(function (res) { const tx = d.transaction('voices', 'readwrite'); tx.objectStore('voices').delete(k); tx.oncomplete = res; }); }); }
+  };
+  function loadVoicesRec() { return VDB.all().then(function (list) { list.forEach(function (r) { VOICE_URL[r.k] = URL.createObjectURL(r.blob); }); }).catch(function () {}); }
+  let playing = null;
+  function playUrl(u, onend) {
+    stopSpeak();
+    try { if (playing) playing.pause(); } catch (e) {}
+    playing = new Audio(u);
+    playing.onended = function () { playing = null; if (onend) onend(); };
+    playing.play().catch(function () { if (onend) onend(); });
+  }
+  function sayItem(cat, it) {
+    const u = VOICE_URL[itemKey(cat, it)];
+    if (u) playUrl(u); else speak(it.yomi || it.name);
+  }
+  // ふりかえりの 文：2つとも 録音が あれば つづけて ながす。なければ 読み上げ
+  function saySentence() {
+    const a = state.subject && VOICE_URL[itemKey('subject', state.subject)], b = state.feeling && VOICE_URL[itemKey('feeling', state.feeling)];
+    if (a && b) playUrl(a, function () { playUrl(b); });
+    else speak(speechText());
+  }
+  let recorder = null, recKey = '';
+  function recordVoice(k, btn) {
+    if (recorder) { recorder.stop(); return; }
+    if (!navigator.mediaDevices || !window.MediaRecorder) { toast('この端末では 録音できません'); return; }
+    navigator.mediaDevices.getUserMedia({ audio: true }).then(function (stream) {
+      const mime = ['audio/mp4', 'audio/webm'].find(function (m) { return MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(m); });
+      recorder = new MediaRecorder(stream, mime ? { mimeType: mime } : undefined); recKey = k;
+      const chunks = [];
+      recorder.ondataavailable = function (e) { if (e.data.size) chunks.push(e.data); };
+      recorder.onstop = function () {
+        stream.getTracks().forEach(function (t) { t.stop(); });
+        const blob = new Blob(chunks, { type: recorder.mimeType || 'audio/mp4' }); recorder = null;
+        if (blob.size < 500) { renderVoiceList(); return; }
+        VDB.put(k, blob).then(function () { VOICE_URL[k] = URL.createObjectURL(blob); toast('🎤 ほぞん しました'); renderVoiceList(); }).catch(function () { toast('ほぞん できませんでした'); });
+      };
+      recorder.start(); btn.classList.add('on'); btn.textContent = '■ とめる';
+      setTimeout(function () { if (recorder && recKey === k) recorder.stop(); }, 15000);
+    }).catch(function () { toast('マイクが つかえません（設定で 許可して ください）'); });
+  }
+  let voiceCat = 'request';
+  function renderVoiceList() {
+    $$('[data-vcat]').forEach(function (b) { b.classList.toggle('on', b.getAttribute('data-vcat') === voiceCat); });
+    const box = $('#voiceList'); box.innerHTML = '';
+    const list = pickedItems(voiceCat) || visibleList(voiceCat);
+    list.forEach(function (it) {
+      const k = itemKey(voiceCat, it), row = document.createElement('div'); row.className = 'vrow';
+      row.appendChild(makePic(it));
+      const nm = document.createElement('span'); nm.className = 'nm'; nm.textContent = it.name + (VOICE_URL[k] ? '　🎤' : ''); row.appendChild(nm);
+      const rb = document.createElement('button'); rb.type = 'button'; rb.className = 'btn rec'; rb.textContent = VOICE_URL[k] ? '🎤 とりなおす' : '🎤 録音';
+      rb.addEventListener('click', function () { recordVoice(k, rb); }); row.appendChild(rb);
+      if (VOICE_URL[k]) {
+        const pb = document.createElement('button'); pb.type = 'button'; pb.className = 'btn'; pb.textContent = '▶'; pb.addEventListener('click', function () { playUrl(VOICE_URL[k]); }); row.appendChild(pb);
+        const db = document.createElement('button'); db.type = 'button'; db.className = 'btn warn'; db.textContent = '🗑'; db.addEventListener('click', function () { if (!confirm('「' + it.name + '」の 録音を けしますか？')) return; VDB.del(k).then(function () { delete VOICE_URL[k]; renderVoiceList(); }); }); row.appendChild(db);
+      }
+      box.appendChild(row);
+    });
+  }
+
+  /* ============================================================
+     スキャン（1スイッチ）：カードが じゅんに 光り、どこかを おすと えらぶ
+     ============================================================ */
+  let scanTimer = null, scanIdx = -1;
+  function scanCards() { return $$('.screen.active .card'); }
+  function scanStop() { clearInterval(scanTimer); scanTimer = null; $$('.card.scan').forEach(function (c) { c.classList.remove('scan'); }); }
+  function scanStep() {
+    const cs = scanCards();
+    $$('.card.scan').forEach(function (c) { c.classList.remove('scan'); });
+    if (!cs.length) return;
+    scanIdx = (scanIdx + 1) % cs.length;
+    cs[scanIdx].classList.add('scan');
+    try { cs[scanIdx].scrollIntoView({ block: 'nearest', behavior: settings.calm ? 'auto' : 'smooth' }); } catch (e) {}
+  }
+  function scanStart() {
+    scanStop();
+    document.body.classList.toggle('scan-mode', settings.input === 'scan');
+    if (settings.input !== 'scan' || !scanCards().length) return;
+    scanIdx = -1; scanStep();
+    scanTimer = setInterval(scanStep, Number(settings.scanMs) || 1500);
+  }
+  function scanSelect() {
+    if ($('.modal.open')) return false;
+    if (state.step === 3) { if (tapOk()) resetForNext(); return true; }
+    if (state.step === 5) { if (tapOk()) go(4); return true; }
+    const c = $('.card.scan');
+    if (!c || Date.now() < lockUntil) return true;
+    scanStop(); c.click();
+    return true;
+  }
+  document.addEventListener('pointerdown', function (e) {
+    if (settings.input !== 'scan' || $('.modal.open')) return;
+    if (e.target.closest('#gear, #sceneChip, .modal')) return;
+    e.preventDefault(); e.stopPropagation();
+    scanSelect();
+  }, true);
+  document.addEventListener('click', function (e) {
+    if (settings.input !== 'scan' || $('.modal.open') || !e.isTrusted) return;
+    if (e.target.closest('#gear, #sceneChip, .modal')) return;
+    e.preventDefault(); e.stopPropagation();   // スキャンの ときは ふつうの タップでは えらばない
+  }, true);
+  document.addEventListener('keydown', function (e) {
+    if (settings.input !== 'scan' || $('.modal.open')) return;
+    if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); scanSelect(); }
+  });
+
+  /* ============================================================
+     場面 と この 端末の きろく
+     ============================================================ */
+  function sceneList() { return String(settings.scenesText || '').split(/\r?\n/).map(function (x) { return x.trim(); }).filter(Boolean); }
+  function renderSceneChip() {
+    const list = sceneList(), chip = $('#sceneChip');
+    if (!list.length) { chip.hidden = true; settings.scene = ''; return; }
+    if (list.indexOf(settings.scene) === -1) settings.scene = list[0];
+    chip.hidden = false; chip.textContent = '📍 ' + settings.scene;
+  }
+  const LS_LOG = 'kimochiBoard.localLog.v1';
+  function localLog(r) {
+    if (!settings.localLog) return;
+    const a = load(LS_LOG) || [];
+    a.push({ t: Date.now(), mode: r.mode, s: r.s || '', f: r.f || '', r: r.r || '', scene: settings.scene || '', ms: Date.now() - state.shownAt, input: settings.input });
+    while (a.length > 3000) a.shift();
+    save(LS_LOG, a);
+  }
+  function renderLogView() {
+    const a = load(LS_LOG) || [], box = $('#logView');
+    box.innerHTML = '';
+    if (!a.length) { box.innerHTML = '<p class="note">まだ きろくが ありません。</p>'; return; }
+    const since = Date.now() - 30 * 864e5, recent = a.filter(function (x) { return x.t >= since; });
+    const count = function (key) { const m = {}; recent.forEach(function (x) { const k = key(x); if (k) m[k] = (m[k] || 0) + 1; }); return Object.keys(m).map(function (k) { return [k, m[k]]; }).sort(function (p, q) { return q[1] - p[1]; }); };
+    const table = function (title, rows) {
+      if (!rows.length) return '';
+      const mx = rows[0][1];
+      return '<p class="note" style="margin:8px 0 2px"><b>' + title + '</b></p><table class="klog">' + rows.slice(0, 12).map(function (r) { return '<tr><td>' + r[0].replace(/</g, '&lt;') + '</td><td><span class="bar" style="width:' + Math.max(4, r[1] / mx * 160) + 'px"></span>' + r[1] + '</td></tr>'; }).join('') + '</table>';
+    };
+    const med = function (arr) { const b = arr.slice().sort(function (p, q) { return p - q; }); return b.length ? b[b.length >> 1] : 0; };
+    const ms = recent.map(function (x) { return x.ms; }).filter(function (v) { return v > 0 && v < 120000; });
+    let html = '<p class="note">この 30日：' + recent.length + '回（えらぶまで まんなか ' + (Math.round(med(ms) / 100) / 10) + 'びょう）</p>';
+    html += table('いま つたえる：よく えらんだ カード', count(function (x) { return x.r; }));
+    html += table('きもち：よく えらんだ カード', count(function (x) { return x.f; }));
+    html += table('場面ごと', count(function (x) { return x.scene; }));
+    html += table('場面 × カード', count(function (x) { return x.scene && (x.r || x.f) ? x.scene + ' → ' + (x.r || x.f) : ''; }));
+    html += '<p class="note" style="margin:8px 0 2px"><b>さいきんの 10回</b></p><table class="klog"><tr><th>日時</th><th>場面</th><th>えらんだ</th><th>時間</th></tr>' + a.slice(-10).reverse().map(function (x) { return '<tr><td>' + fmtTime(new Date(x.t).toISOString()) + '</td><td>' + (x.scene || '') + '</td><td>' + (x.r || ((x.s ? x.s + ' → ' : '') + x.f)) + '</td><td>' + Math.round(x.ms / 100) / 10 + 'びょう' + (x.input === 'scan' ? '✨' : '') + '</td></tr>'; }).join('') + '</table>';
+    box.innerHTML = html;
+  }
+  function exportLogCsv() {
+    const a = load(LS_LOG) || [];
+    const rows = ['日時,モード,場面,なにを した,きもち,いま つたえる,えらぶまで(秒),えらびかた'].concat(a.map(function (x) { return [fmtTime(new Date(x.t).toISOString()), x.mode, x.scene, x.s, x.f, x.r, Math.round(x.ms / 100) / 10, x.input === 'scan' ? 'スキャン' : 'タッチ'].join(','); }));
+    const el = document.createElement('a'); el.href = URL.createObjectURL(new Blob(['\ufeff' + rows.join('\n')], { type: 'text/csv' })); el.download = 'きもちボード_きろく.csv'; document.body.appendChild(el); el.click(); setTimeout(function () { el.remove(); }, 800);
   }
 
   /* ============================================================
@@ -1218,7 +1541,12 @@ function jaSay(t) {
       else g.style.removeProperty('--cols');
     });
     document.body.classList.toggle('calm', !!settings.calm);
+    document.body.classList.toggle('mode-req', settings.mode === 'req');
     if (state.data) renderLists();
+    renderSceneChip();
+    // モードを かえたら さいしょの 画面へ
+    if (state.data && lastMode !== settings.mode) { lastMode = settings.mode; state.subject = state.feeling = state.request = null; go(homeStep()); }
+    else scanStart();
     $('#rateVal').textContent = '×' + Number(settings.rate).toFixed(2);
     $('#pitchVal').textContent = '×' + Number(settings.pitch).toFixed(2);
   }
@@ -1290,7 +1618,7 @@ function jaSay(t) {
   let pickCat = 'subject';
 
   function setPick(cat, keys) {
-    const np = { subject: settings.pick.subject.slice(), feeling: settings.pick.feeling.slice() };
+    const np = { subject: settings.pick.subject.slice(), feeling: settings.pick.feeling.slice(), request: (settings.pick.request || []).slice() };
     np[cat] = keys;
     settings.pick = np;
     save(LS_SETTINGS, settings);
@@ -1305,7 +1633,7 @@ function jaSay(t) {
 
   function updatePickStatus() {
     $('#pickStatus').textContent =
-      '① なにを した？：' + pickSummary('subject') + '\n② きもち：' + pickSummary('feeling');
+      '① なにを した？：' + pickSummary('subject') + '\n② きもち：' + pickSummary('feeling') + '\n③ いま つたえる：' + pickSummary('request');
   }
 
   function renderPicker() {
@@ -1590,12 +1918,17 @@ function jaSay(t) {
     updateStatus();
     updatePickStatus();
     refreshEditor();
+    renderVoiceList();
+    renderLogView();
+    scanStop();
     $('#settingsModal').classList.add('open');
   }
   function closeSettings() {
     $('#settingsModal').classList.remove('open');
     if (state.step === 3 && state.subject && state.feeling) renderResult();
+    if (recorder) recorder.stop();
     lockUntil = Date.now() + 500;
+    scanStart();
   }
 
   // ⚙️ の長おし
@@ -1651,7 +1984,8 @@ function jaSay(t) {
     initData();
     applySettings();
     renderLists();
-    go(1);
+    go(homeStep());
+    loadVoicesRec();
     bindGear();
     bindForm();
     makeTouchIcon();
@@ -1660,6 +1994,12 @@ function jaSay(t) {
     $('#back3').addEventListener('click', function () { if (tapOk()) { stopSpeak(); go(2); } });
     $('#btnTalk').addEventListener('click', function () { if (tapOk()) speak(speechText()); });
     $('#btnNext').addEventListener('click', function () { if (tapOk()) resetForNext(); });
+    $('#btnTalk5').addEventListener('click', function () { if (tapOk() && state.request) sayItem('request', state.request); });
+    $('#btnBack5').addEventListener('click', function () { if (tapOk()) { stopSpeak(); go(4); } });
+    $('#sceneChip').addEventListener('click', function () { const l = sceneList(); if (!l.length) return; settings.scene = l[(l.indexOf(settings.scene) + 1) % l.length]; save(LS_SETTINGS, settings); renderSceneChip(); });
+    $$('[data-vcat]').forEach(function (b) { b.addEventListener('click', function () { voiceCat = b.getAttribute('data-vcat'); renderVoiceList(); }); });
+    $('#btnLogCsv').addEventListener('click', exportLogCsv);
+    $('#btnLogClear').addEventListener('click', function () { if (!confirm('この 端末の きろくを ぜんぶ けしますか？')) return; save(LS_LOG, []); renderLogView(); });
 
     $$('[data-close]').forEach(function (b) { b.addEventListener('click', closeSettings); });
     $('#settingsModal').addEventListener('click', function (e) { if (e.target.id === 'settingsModal') closeSettings(); });
@@ -1698,11 +2038,11 @@ function jaSay(t) {
       e.target.value = '';
     });
     $('#btnTestVoice').addEventListener('click', function () {
-      speak('こくごは たのしかった');
+      speak(settings.mode === 'req' ? 'てつだってください' : 'こくごは たのしかった');
     });
     $('#btnResetSettings').addEventListener('click', function () {
       if (!confirm('せっていを はじめの状態に もどしますか？（GAS の URL も消えます）')) return;
-      settings = Object.assign({}, DEFAULT_SETTINGS, { pick: { subject: [], feeling: [] } });
+      settings = Object.assign({}, DEFAULT_SETTINGS, { pick: { subject: [], feeling: [], request: [] } });
       save(LS_SETTINGS, settings);
       renderLists();
       fillForm();
